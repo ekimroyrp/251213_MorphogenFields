@@ -87,7 +87,7 @@ const seedMaterial = new THREE.ShaderMaterial({
   vertexShader: screenVertex,
   fragmentShader: seedFragment,
   uniforms: {
-    seed: { value: DEFAULT_SEED }
+    seed: { value: Math.random() * 999.0 }
   }
 });
 
