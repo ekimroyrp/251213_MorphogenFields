@@ -342,6 +342,41 @@
     color: #111;
   }
 
+  .magnet-toggle-row {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .magnet-toggle-row .name {
+    width: 64px;
+    font-size: 0.8em;
+  }
+
+  .toggle-btn {
+    padding: 6px 10px;
+    border: 1px solid #0d0d0f;
+    background: linear-gradient(135deg, #ff9f4d, #ff7a1a);
+    color: #0c0c0d;
+    letter-spacing: 0.08em;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    min-width: 70px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    margin-left: auto;
+  }
+
+  .toggle-btn.off {
+    background: linear-gradient(135deg, #c4c4c7, #b0b0b4);
+    color: #222;
+    box-shadow: none;
+    border-color: #101014;
+  }
+
   .icon-btn {
     width: 28px;
     height: 28px;

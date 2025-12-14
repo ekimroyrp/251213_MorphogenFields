@@ -8,12 +8,19 @@ type Magnet = {
   pos: THREE.Vector2;
   strength: number;
   radius: number;
+  active: boolean;
   handle?: HTMLDivElement;
 };
 
 type SavedState = {
   params?: Partial<typeof DEFAULT_PARAMS>;
-  magnets?: Array<{ label: string; pos: [number, number]; strength: number; radius: number }>;
+  magnets?: Array<{
+    label: string;
+    pos: [number, number];
+    strength: number;
+    radius: number;
+    active?: boolean;
+  }>;
   panel?: { left: number; top: number };
 };
 
@@ -156,7 +163,8 @@ function persistState() {
       label: m.label,
       pos: [parseFloat(m.pos.x.toFixed(4)), parseFloat(m.pos.y.toFixed(4))],
       strength: m.strength,
-      radius: m.radius
+      radius: m.radius,
+      active: m.active
     })),
     panel: { left: panelRect.left, top: panelRect.top }
   };
@@ -370,9 +378,10 @@ function clamp01(v: number) {
 }
 
 function syncMagnetUniforms() {
-  stepMaterial.uniforms.magnetCount.value = magnets.length;
+  const activeMagnets = magnets.filter((m) => m.active);
+  stepMaterial.uniforms.magnetCount.value = activeMagnets.length;
   for (let i = 0; i < MAGNET_MAX; i++) {
-    const m = magnets[i];
+    const m = activeMagnets[i];
     const target = magnetUniforms[i];
     if (m) {
       target.set(m.pos.x, m.pos.y, m.strength, m.radius);
@@ -389,14 +398,15 @@ function handleCanvasPointerDown(ev: PointerEvent) {
   addMagnet({ pos });
 }
 
-function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "label">>) {
+function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "label" | "active">>) {
   if (magnets.length >= MAGNET_MAX) return;
   const magnet: Magnet = {
     id: magnetCounter,
     label: opts?.label ?? `Magnet ${magnetCounter}`,
     pos: opts?.pos ? opts.pos.clone() : new THREE.Vector2(0.5, 0.5),
     strength: opts?.strength ?? 0.8,
-    radius: opts?.radius ?? 0.16
+    radius: opts?.radius ?? 0.16,
+    active: opts?.active ?? true
   };
   magnetCounter += 1;
   magnets.push(magnet);
@@ -593,7 +603,29 @@ function renderMagnetList() {
     });
     radiusRow.append(radiusLabel, radiusRange, radiusReadout);
 
-    item.append(label, remove, strengthRow, radiusRow);
+    const toggleRow = document.createElement("div");
+    toggleRow.className = "magnet-toggle-row";
+    const toggleLabel = document.createElement("span");
+    toggleLabel.className = "name";
+    toggleLabel.textContent = "Activate";
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "toggle-btn";
+    const updateToggle = () => {
+      toggleBtn.textContent = magnet.active ? "On" : "Off";
+      toggleBtn.classList.toggle("off", !magnet.active);
+    };
+    updateToggle();
+    toggleBtn.addEventListener("click", () => {
+      magnet.active = !magnet.active;
+      updateToggle();
+      syncMagnetUniforms();
+      copyFromBase();
+      goToIterations(params.iterations);
+      scheduleSave();
+    });
+    toggleRow.append(toggleLabel, toggleBtn);
+
+    item.append(label, remove, strengthRow, radiusRow, toggleRow);
     magnetListEl.appendChild(item);
   });
 }
@@ -843,7 +875,8 @@ function loadOrInitialize() {
         label: m.label,
         pos,
         strength: m.strength,
-        radius: m.radius
+        radius: m.radius,
+        active: m.active ?? true
       });
     });
     magnetCounter = saved.magnets.length + 1;
