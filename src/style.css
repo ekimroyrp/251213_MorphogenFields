@@ -104,6 +104,19 @@
     pointer-events: none;
   }
 
+  .magnet-handle.inactive {
+    background: #29292d;
+    border-color: #ff7a1a;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .magnet-handle.inactive::before,
+  .magnet-handle.inactive::after,
+  .magnet-handle.inactive .pulse-third {
+    display: none;
+  }
+
   .magnet-handle.dragging {
     cursor: grabbing;
     box-shadow: 0 0 0 1px rgba(255, 140, 0, 0.9), 0 10px 24px rgba(0, 0, 0, 0.45);
@@ -282,6 +295,7 @@
   #rewind-sim {
     border-color: #ff7a1a;
     box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.6);
+    background: linear-gradient(135deg, #2c2c30, #111114);
   }
 
   button.full {
@@ -371,10 +385,10 @@
   }
 
   .toggle-btn.off {
-    background: linear-gradient(135deg, #c4c4c7, #b0b0b4);
-    color: #222;
-    box-shadow: none;
-    border-color: #101014;
+    background: linear-gradient(135deg, #2c2c30, #111114);
+    color: #f1f1f4;
+    border-color: #ff7a1a;
+    box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.6);
   }
 
   .icon-btn {

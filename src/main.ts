@@ -398,7 +398,9 @@ function handleCanvasPointerDown(ev: PointerEvent) {
   addMagnet({ pos });
 }
 
-function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "label" | "active">>) {
+function addMagnet(
+  opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "label" | "active">>
+): Magnet | undefined {
   if (magnets.length >= MAGNET_MAX) return;
   const magnet: Magnet = {
     id: magnetCounter,
@@ -415,6 +417,7 @@ function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "
   syncMagnetUniforms();
   restartAndReplay();
   scheduleSave();
+  return magnet;
 }
 
 function removeMagnet(id: number) {
@@ -607,12 +610,13 @@ function renderMagnetList() {
     toggleRow.className = "magnet-toggle-row";
     const toggleLabel = document.createElement("span");
     toggleLabel.className = "name";
-    toggleLabel.textContent = "Activate";
+    toggleLabel.textContent = "State";
     const toggleBtn = document.createElement("button");
     toggleBtn.className = "toggle-btn";
     const updateToggle = () => {
       toggleBtn.textContent = magnet.active ? "On" : "Off";
       toggleBtn.classList.toggle("off", !magnet.active);
+      magnet.handle?.classList.toggle("inactive", !magnet.active);
     };
     updateToggle();
     toggleBtn.addEventListener("click", () => {
@@ -871,13 +875,16 @@ function loadOrInitialize() {
   if (saved?.magnets?.length) {
     saved.magnets.forEach((m) => {
       const pos = new THREE.Vector2(clamp01(m.pos[0]), clamp01(m.pos[1]));
-      addMagnet({
+      const mag = addMagnet({
         label: m.label,
         pos,
         strength: m.strength,
         radius: m.radius,
         active: m.active ?? true
       });
+      if (mag?.handle && !(m.active ?? true)) {
+        mag.handle.classList.add("inactive");
+      }
     });
     magnetCounter = saved.magnets.length + 1;
   }
