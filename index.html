@@ -17,6 +17,11 @@
         <div class="panel-section">
           <div class="section-title">Simulation</div>
           <label class="field">
+            <span>Seed</span>
+            <input id="seed" type="range" min="0" max="999" step="1" value="0" />
+            <output id="seed-val">0</output>
+          </label>
+          <label class="field">
             <span>Feed</span>
             <input id="feed" type="range" min="0.0" max="0.1" step="0.0005" value="0.037" />
             <output id="feed-val">0.0370</output>
@@ -42,18 +47,15 @@
             <output id="iterations-val">30</output>
           </label>
           <label class="field">
-            <span>Field Threshold</span>
+            <span>Threshold</span>
             <input id="threshold" type="range" min="0.0" max="3.0" step="0.01" value="0.2" />
             <output id="threshold-val">0.20</output>
           </label>
-          <div class="row">
-            <button id="seed-btn" class="accent">Reseed</button>
-            <button id="clear-btn">Clear Magnets</button>
-          </div>
         </div>
         <div class="panel-section">
           <div class="section-title">Magnets</div>
           <button id="add-magnet" class="full accent">+ Add Magnet</button>
+          <button id="clear-btn" class="full accent">- Clear Magnets</button>
           <div id="magnet-list" class="magnet-list"></div>
         </div>
       </div>

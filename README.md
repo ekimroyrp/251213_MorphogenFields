@@ -18,7 +18,8 @@ This repository explores ferrofluid-inspired reaction–diffusion behavior modul
 
 ## Controls
 - Feed/Kill/Diffusion U/Diffusion V: tune RD chemistry parameters.
+- Seed: adjust the noise seed for RD initialization.
 - Iterations: number of simulation steps per user change (higher = sharper, slower).
-- Field Threshold: how strong the magnet field must be before patterns grow.
+- Threshold: how strong the magnet field must be before patterns grow.
 - Reseed: randomize RD initialization; Clear Magnets: remove all magnets.
 - + Add Magnet: spawn a draggable magnet with adjustable strength and radius; drag on canvas to reposition; remove via ✕ in the list.

@@ -152,7 +152,6 @@ function loadState(): SavedState | null {
 }
 
 function seedSimulation() {
-  seedMaterial.uniforms.seed.value = Math.random() * 999.0;
   renderer.setRenderTarget(simTargets[simIndex]);
   renderer.render(seedScene, simCamera);
   renderer.setRenderTarget(simTargets[1 - simIndex]);
@@ -411,6 +410,16 @@ function bindSlider(
 }
 
 function setupUI() {
+  bindSlider(
+    "seed",
+    (v) => {
+      seedMaterial.uniforms.seed.value = v;
+      queueSimulation(params.iterations);
+      scheduleSave();
+    },
+    (v) => v.toFixed(0),
+    Math.floor(seedMaterial.uniforms.seed.value)
+  );
   bindSlider("feed", (v) => (params.feed = v), (v) => v.toFixed(4), params.feed);
   bindSlider("kill", (v) => (params.kill = v), (v) => v.toFixed(4), params.kill);
   bindSlider("du", (v) => (params.du = v), (v) => v.toFixed(3), params.du);
@@ -423,14 +432,8 @@ function setupUI() {
     params.fieldThreshold
   );
 
-  const seedBtn = document.getElementById("seed-btn");
   const clearBtn = document.getElementById("clear-btn");
   const addMagnetBtn = document.getElementById("add-magnet");
-  seedBtn?.addEventListener("click", () => {
-    seedSimulation();
-    queueSimulation(params.iterations);
-    scheduleSave();
-  });
   clearBtn?.addEventListener("click", () => {
     clearMagnets();
   });
