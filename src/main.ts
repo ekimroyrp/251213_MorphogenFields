@@ -189,7 +189,6 @@ function seedSimulation() {
 }
 
 function copyFromBase() {
-  stopAnimation();
   if (!baseState) return;
   copyMaterial.uniforms.source.value = baseState.texture;
   for (let i = 0; i < simTargets.length; i++) {
@@ -303,7 +302,7 @@ function animateStep(timestamp: number) {
     }
   } else {
     animAccum -= stepDelta;
-    const desired = Math.max(0, Math.floor(animAccum));
+    const desired = Math.max(animTarget, Math.floor(animAccum));
     if (desired < currentSteps) {
       copyFromBase();
       goToIterations(desired);
@@ -320,19 +319,19 @@ function animateStep(timestamp: number) {
 
 function startAnimation() {
   stopAnimation();
+  const startStep = Math.max(0, Math.floor(params.iterations));
   copyFromBase();
+  goToIterations(startStep);
   animating = true;
   animTarget = animDirection === 1 ? MAX_ITERATIONS : 0;
-  animAccum = Math.max(currentSteps, Math.floor(params.iterations));
-  params.iterations = animTarget;
-  setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
-  goToIterations(Math.floor(animAccum));
+  animAccum = startStep;
   animLastTime = 0;
-  if (animateBtn) {
-    animateBtn.textContent = "Stop";
-  }
-  if (rewindBtn) {
-    rewindBtn.textContent = "Stop Rewind";
+  if (animDirection === 1) {
+    if (animateBtn) animateBtn.textContent = "Stop";
+    if (rewindBtn) rewindBtn.textContent = "<< Rewind";
+  } else {
+    if (rewindBtn) rewindBtn.textContent = "Stop";
+    if (animateBtn) animateBtn.textContent = "Play >>";
   }
   animRaf = requestAnimationFrame(animateStep);
 }
