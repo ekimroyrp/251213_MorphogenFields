@@ -39,7 +39,7 @@ uniform float dv;
 uniform float dt;
 uniform float fieldThreshold;
 uniform int magnetCount;
-uniform vec3 magnetData[16];
+uniform vec4 magnetData[16]; // xy = pos, z = strength, w = radius
 uniform vec2 resolution;
 
 vec2 laplace(vec2 uv) {
@@ -62,8 +62,10 @@ void main() {
   for (int i = 0; i < 16; i++) {
     if (i >= magnetCount) break;
     vec2 delta = vUv - magnetData[i].xy;
-    float dist2 = dot(delta, delta) + 0.0003;
-    field += magnetData[i].z / dist2;
+    float dist2 = dot(delta, delta);
+    float radius = magnetData[i].w + 0.0006;
+    float falloff = exp(-dist2 / (radius * radius));
+    field += magnetData[i].z * falloff;
   }
   float mask = smoothstep(fieldThreshold, fieldThreshold + 0.35, field);
 
@@ -99,14 +101,19 @@ vec3 shade(vec2 uv) {
   float hy2 = texture2D(stateTex, uv - vec2(0.0, e.y)).g;
 
   vec3 n = normalize(vec3(hx - hx2, hy - hy2, 2.0 * e.x));
-  vec3 lightDir = normalize(vec3(-0.35, 0.4, 0.85));
-  float diff = max(dot(n, lightDir), 0.0);
-  float spec = pow(max(dot(reflect(-lightDir, n), vec3(0.0, 0.0, 1.0)), 0.0), 64.0);
+  vec3 lightA = normalize(vec3(-0.35, 0.45, 0.85));
+  vec3 lightB = normalize(vec3(0.55, -0.2, 0.65));
+  float diffA = max(dot(n, lightA), 0.0);
+  float diffB = max(dot(n, lightB), 0.0);
+  float specA = pow(max(dot(reflect(-lightA, n), vec3(0.0, 0.0, 1.0)), 0.0), 90.0);
+  float specB = pow(max(dot(reflect(-lightB, n), vec3(0.0, 0.0, 1.0)), 0.0), 60.0);
 
-  vec3 base = vec3(0.05);
-  vec3 chrome = mix(vec3(0.08), vec3(0.25), diff) + spec * 0.9;
-  float rim = pow(1.0 - abs(n.z), 3.0) * 0.3;
-  return base + chrome * (0.35 + h * 1.6) + rim;
+  vec3 base = vec3(0.04);
+  vec3 chrome = mix(vec3(0.08), vec3(0.26), diffA * 0.7 + diffB * 0.3) + (specA * 0.8 + specB * 0.35);
+  float rim = pow(1.0 - abs(n.z), 3.0) * 0.35;
+  float vignette = smoothstep(0.9, 0.4, length(uv - 0.5));
+  vec3 env = mix(vec3(0.18), vec3(0.28), uv.y) * 0.1;
+  return base + (chrome + env) * (0.35 + h * 1.7) + rim * 0.8 + vignette * 0.15;
 }
 
 void main() {

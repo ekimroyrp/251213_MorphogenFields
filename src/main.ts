@@ -7,13 +7,20 @@ type Magnet = {
   label: string;
   pos: THREE.Vector2;
   strength: number;
+  radius: number;
   handle?: HTMLDivElement;
+};
+
+type SavedState = {
+  params?: Partial<typeof DEFAULT_PARAMS>;
+  magnets?: Array<{ label: string; pos: [number, number]; strength: number; radius: number }>;
+  panel?: { left: number; top: number };
+  liveDrag?: boolean;
 };
 
 const MAGNET_MAX = 16;
 const SIM_RES = 512;
-
-const params = {
+const DEFAULT_PARAMS = {
   feed: 0.037,
   kill: 0.06,
   du: 0.16,
@@ -22,12 +29,19 @@ const params = {
   iterations: 30,
   fieldThreshold: 0.2
 };
+const STORAGE_KEY = "ferrofluid-fields-state-v1";
+
+let params = { ...DEFAULT_PARAMS };
+let magnets: Magnet[] = [];
+let magnetCounter = 1;
+let liveDrag = true;
 
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const magnetLayer = document.getElementById("magnet-layer") as HTMLElement;
 const magnetListEl = document.getElementById("magnet-list") as HTMLElement;
 const panelEl = document.getElementById("ui-panel") as HTMLElement;
 const panelHandleEl = document.getElementById("panel-handle") as HTMLElement;
+const liveDragInput = document.getElementById("live-drag") as HTMLInputElement;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setClearColor(0xffffff, 1);
@@ -52,7 +66,7 @@ const makeTarget = () =>
 const simTargets = [makeTarget(), makeTarget()];
 let simIndex = 0;
 
-const magnetUniforms = Array.from({ length: MAGNET_MAX }, () => new THREE.Vector3());
+const magnetUniforms = Array.from({ length: MAGNET_MAX }, () => new THREE.Vector4());
 
 const stepMaterial = new THREE.ShaderMaterial({
   vertexShader: screenVertex,
@@ -98,10 +112,48 @@ seedScene.add(seedMesh);
 const displayMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), displayMaterial);
 displayScene.add(displayMesh);
 
-let magnets: Magnet[] = [];
-let magnetCounter = 1;
 let draggingMagnet: Magnet | null = null;
 let panelDragStart: { x: number; y: number; left: number; top: number } | null = null;
+let pendingIterations = 0;
+let scheduledStep = false;
+let saveTimer: number | null = null;
+
+function scheduleSave() {
+  if (saveTimer) {
+    window.clearTimeout(saveTimer);
+  }
+  saveTimer = window.setTimeout(persistState, 140);
+}
+
+function persistState() {
+  const panelRect = panelEl.getBoundingClientRect();
+  const payload: SavedState = {
+    params: { ...params },
+    magnets: magnets.map((m) => ({
+      label: m.label,
+      pos: [parseFloat(m.pos.x.toFixed(4)), parseFloat(m.pos.y.toFixed(4))],
+      strength: m.strength,
+      radius: m.radius
+    })),
+    panel: { left: panelRect.left, top: panelRect.top },
+    liveDrag
+  };
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  } catch (err) {
+    console.warn("Persist failed", err);
+  }
+}
+
+function loadState(): SavedState | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as SavedState) : null;
+  } catch (err) {
+    console.warn("Load state failed", err);
+    return null;
+  }
+}
 
 function seedSimulation() {
   seedMaterial.uniforms.seed.value = Math.random() * 999.0;
@@ -135,6 +187,17 @@ function stepSimulation(iterations: number) {
   syncDisplayTexture();
 }
 
+function queueSimulation(iterations: number) {
+  pendingIterations = Math.max(pendingIterations, Math.max(1, Math.floor(iterations)));
+  if (scheduledStep) return;
+  scheduledStep = true;
+  requestAnimationFrame(() => {
+    stepSimulation(pendingIterations);
+    pendingIterations = 0;
+    scheduledStep = false;
+  });
+}
+
 function syncDisplayTexture() {
   displayMaterial.uniforms.stateTex.value = simTargets[simIndex].texture;
 }
@@ -161,34 +224,50 @@ function syncMagnetUniforms() {
     const m = magnets[i];
     const target = magnetUniforms[i];
     if (m) {
-      target.set(m.pos.x, m.pos.y, m.strength);
+      target.set(m.pos.x, m.pos.y, m.strength, m.radius);
     } else {
-      target.set(0, 0, 0);
+      target.set(0, 0, 0, 0);
     }
   }
 }
 
-function addMagnet() {
+function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "label">>) {
+  if (magnets.length >= MAGNET_MAX) return;
   const magnet: Magnet = {
     id: magnetCounter,
-    label: `Magnet ${magnetCounter}`,
-    pos: new THREE.Vector2(0.5, 0.5),
-    strength: 1.2
+    label: opts?.label ?? `Magnet ${magnetCounter}`,
+    pos: opts?.pos ? opts.pos.clone() : new THREE.Vector2(0.5, 0.5),
+    strength: opts?.strength ?? 1.2,
+    radius: opts?.radius ?? 0.22
   };
   magnetCounter += 1;
   magnets.push(magnet);
   createMagnetHandle(magnet);
   renderMagnetList();
   syncMagnetUniforms();
-  stepSimulation(params.iterations);
+  queueSimulation(params.iterations);
+  scheduleSave();
+}
+
+function removeMagnet(id: number) {
+  const idx = magnets.findIndex((m) => m.id === id);
+  if (idx === -1) return;
+  const [magnet] = magnets.splice(idx, 1);
+  magnet.handle?.remove();
+  renderMagnetList();
+  syncMagnetUniforms();
+  queueSimulation(params.iterations);
+  scheduleSave();
 }
 
 function clearMagnets() {
+  magnets.forEach((m) => m.handle?.remove());
   magnets = [];
   magnetLayer.innerHTML = "";
   magnetListEl.innerHTML = "";
   syncMagnetUniforms();
-  stepSimulation(params.iterations);
+  queueSimulation(params.iterations);
+  scheduleSave();
 }
 
 function createMagnetHandle(magnet: Magnet) {
@@ -214,13 +293,17 @@ function createMagnetHandle(magnet: Magnet) {
     draggingMagnet.pos.set(x, 1.0 - y);
     positionMagnetHandle(draggingMagnet);
     syncMagnetUniforms();
+    if (liveDrag) {
+      queueSimulation(Math.min(18, params.iterations));
+    }
   };
 
   const onPointerUp = () => {
     if (draggingMagnet) {
       draggingMagnet.handle?.classList.remove("dragging");
       draggingMagnet = null;
-      stepSimulation(params.iterations);
+      queueSimulation(params.iterations);
+      scheduleSave();
     }
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerup", onPointerUp);
@@ -247,36 +330,71 @@ function renderMagnetList() {
   magnets.forEach((magnet) => {
     const item = document.createElement("div");
     item.className = "magnet-item";
+
     const label = document.createElement("div");
     label.className = "label";
     label.textContent = magnet.label;
 
+    const remove = document.createElement("button");
+    remove.className = "icon-btn";
+    remove.textContent = "✕";
+    remove.title = "Remove magnet";
+    remove.addEventListener("click", () => removeMagnet(magnet.id));
+
     const strengthRow = document.createElement("div");
     strengthRow.className = "strength";
-    const range = document.createElement("input");
-    range.type = "range";
-    range.min = "0.1";
-    range.max = "3.0";
-    range.step = "0.05";
-    range.value = magnet.strength.toFixed(2);
-    const readout = document.createElement("span");
-    readout.textContent = magnet.strength.toFixed(2);
-    range.addEventListener("input", () => {
-      magnet.strength = parseFloat(range.value);
-      readout.textContent = magnet.strength.toFixed(2);
+    const strengthRange = document.createElement("input");
+    strengthRange.type = "range";
+    strengthRange.min = "0.1";
+    strengthRange.max = "3.0";
+    strengthRange.step = "0.05";
+    strengthRange.value = magnet.strength.toFixed(2);
+    const strengthReadout = document.createElement("span");
+    strengthReadout.textContent = magnet.strength.toFixed(2);
+    strengthRange.addEventListener("input", () => {
+      magnet.strength = parseFloat(strengthRange.value);
+      strengthReadout.textContent = magnet.strength.toFixed(2);
       syncMagnetUniforms();
-      stepSimulation(params.iterations);
+      queueSimulation(params.iterations);
+      scheduleSave();
     });
+    strengthRow.append(strengthRange, strengthReadout);
 
-    strengthRow.append(range, readout);
-    item.append(label, strengthRow);
+    const radiusRow = document.createElement("div");
+    radiusRow.className = "strength";
+    const radiusRange = document.createElement("input");
+    radiusRange.type = "range";
+    radiusRange.min = "0.05";
+    radiusRange.max = "0.6";
+    radiusRange.step = "0.01";
+    radiusRange.value = magnet.radius.toFixed(2);
+    const radiusReadout = document.createElement("span");
+    radiusReadout.textContent = magnet.radius.toFixed(2);
+    radiusRange.addEventListener("input", () => {
+      magnet.radius = parseFloat(radiusRange.value);
+      radiusReadout.textContent = magnet.radius.toFixed(2);
+      syncMagnetUniforms();
+      queueSimulation(params.iterations);
+      scheduleSave();
+    });
+    radiusRow.append(radiusRange, radiusReadout);
+
+    item.append(label, remove, strengthRow, radiusRow);
     magnetListEl.appendChild(item);
   });
 }
 
-function bindSlider(id: string, onChange: (v: number) => void, formatter?: (v: number) => string) {
+function bindSlider(
+  id: string,
+  onChange: (v: number) => void,
+  formatter?: (v: number) => string,
+  initialValue?: number
+) {
   const input = document.getElementById(id) as HTMLInputElement;
   const output = document.getElementById(`${id}-val`) as HTMLOutputElement;
+  if (initialValue !== undefined) {
+    input.value = initialValue.toString();
+  }
   const update = (value: number) => {
     if (output) {
       output.textContent = formatter ? formatter(value) : value.toFixed(4);
@@ -286,31 +404,44 @@ function bindSlider(id: string, onChange: (v: number) => void, formatter?: (v: n
   input.addEventListener("input", () => {
     const v = parseFloat(input.value);
     update(v);
-    stepSimulation(params.iterations);
+    queueSimulation(params.iterations);
+    scheduleSave();
   });
   update(parseFloat(input.value));
 }
 
 function setupUI() {
-  bindSlider("feed", (v) => (params.feed = v), (v) => v.toFixed(4));
-  bindSlider("kill", (v) => (params.kill = v), (v) => v.toFixed(4));
-  bindSlider("du", (v) => (params.du = v), (v) => v.toFixed(3));
-  bindSlider("dv", (v) => (params.dv = v), (v) => v.toFixed(3));
-  bindSlider("iterations", (v) => (params.iterations = v), (v) => v.toFixed(0));
-  bindSlider("threshold", (v) => (params.fieldThreshold = v), (v) => v.toFixed(2));
+  bindSlider("feed", (v) => (params.feed = v), (v) => v.toFixed(4), params.feed);
+  bindSlider("kill", (v) => (params.kill = v), (v) => v.toFixed(4), params.kill);
+  bindSlider("du", (v) => (params.du = v), (v) => v.toFixed(3), params.du);
+  bindSlider("dv", (v) => (params.dv = v), (v) => v.toFixed(3), params.dv);
+  bindSlider("iterations", (v) => (params.iterations = v), (v) => v.toFixed(0), params.iterations);
+  bindSlider(
+    "threshold",
+    (v) => (params.fieldThreshold = v),
+    (v) => v.toFixed(2),
+    params.fieldThreshold
+  );
 
   const seedBtn = document.getElementById("seed-btn");
   const clearBtn = document.getElementById("clear-btn");
   const addMagnetBtn = document.getElementById("add-magnet");
   seedBtn?.addEventListener("click", () => {
     seedSimulation();
-    stepSimulation(params.iterations);
+    queueSimulation(params.iterations);
+    scheduleSave();
   });
   clearBtn?.addEventListener("click", () => {
     clearMagnets();
   });
   addMagnetBtn?.addEventListener("click", () => {
     addMagnet();
+  });
+
+  liveDragInput.checked = liveDrag;
+  liveDragInput.addEventListener("change", () => {
+    liveDrag = liveDragInput.checked;
+    scheduleSave();
   });
 
   let lastPointerId: number | null = null;
@@ -343,17 +474,48 @@ function setupUI() {
       panelHandleEl.classList.remove("ghost");
       panelDragStart = null;
       lastPointerId = null;
+      scheduleSave();
     }
   });
+}
+
+function loadOrInitialize() {
+  const saved = loadState();
+  if (saved?.params) {
+    params = { ...params, ...saved.params };
+  }
+  if (saved?.liveDrag !== undefined) {
+    liveDrag = saved.liveDrag;
+  }
+  // Position panel before display to avoid jump
+  if (saved?.panel) {
+    panelEl.style.left = `${saved.panel.left}px`;
+    panelEl.style.top = `${saved.panel.top}px`;
+    panelEl.style.right = "auto";
+  }
+  if (saved?.magnets?.length) {
+    saved.magnets.forEach((m) => {
+      const pos = new THREE.Vector2(clamp01(m.pos[0]), clamp01(m.pos[1]));
+      addMagnet({
+        label: m.label,
+        pos,
+        strength: m.strength,
+        radius: m.radius
+      });
+    });
+    magnetCounter = saved.magnets.length + 1;
+  } else {
+    addMagnet();
+  }
 }
 
 function init() {
   resize();
   window.addEventListener("resize", resize);
+  loadOrInitialize();
   setupUI();
-  addMagnet();
   seedSimulation();
-  stepSimulation(params.iterations);
+  queueSimulation(params.iterations);
   renderer.setAnimationLoop(renderFrame);
 }
 
