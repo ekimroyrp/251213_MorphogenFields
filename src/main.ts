@@ -26,7 +26,7 @@ const DEFAULT_PARAMS = {
   du: 0.195,
   dv: 0.255,
   dt: 1.0,
-  iterations: 1,
+  iterations: 0,
   fieldThreshold: 0.14,
   percentage: 25
 };
@@ -225,7 +225,9 @@ function stepSimulation(iterations: number) {
 }
 
 function queueSimulation(iterations: number) {
-  pendingIterations = Math.max(pendingIterations, Math.max(1, Math.floor(iterations)));
+  const steps = Math.max(0, Math.floor(iterations));
+  if (steps <= 0) return;
+  pendingIterations = Math.max(pendingIterations, steps);
   if (scheduledStep) return;
   scheduledStep = true;
   requestAnimationFrame(() => {
@@ -675,7 +677,9 @@ function setupUI() {
   const clearBtn = document.getElementById("clear-btn");
   const addMagnetBtn = document.getElementById("add-magnet");
   resetBtn?.addEventListener("click", () => {
-    params = { ...DEFAULT_PARAMS };
+    stopAnimation();
+    const currentIter = params.iterations;
+    params = { ...DEFAULT_PARAMS, iterations: currentIter };
     seedMaterial.uniforms.seed.value = DEFAULT_SEED;
     recreateSimulation(DEFAULT_RES);
     setSliderValue("resolution", DEFAULT_RES, (v) => v.toFixed(0));
@@ -686,9 +690,10 @@ function setupUI() {
     setSliderValue("kill", params.kill, (v) => v.toFixed(4));
     setSliderValue("du", params.du, (v) => v.toFixed(3));
     setSliderValue("dv", params.dv, (v) => v.toFixed(3));
-    setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
     setSliderValue("threshold", params.fieldThreshold, (v) => v.toFixed(2));
+    setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
     seedSimulation();
+    goToIterations(params.iterations);
     scheduleSave();
   });
   clearBtn?.addEventListener("click", () => {
