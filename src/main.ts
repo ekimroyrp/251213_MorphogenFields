@@ -32,16 +32,23 @@ const DEFAULT_PARAMS = {
 };
 const DEFAULT_SEED = 735;
 const STORAGE_KEY = "ferrofluid-fields-state-v1";
+const MAX_ITERATIONS = 6000;
 
 let params = { ...DEFAULT_PARAMS };
 let magnets: Magnet[] = [];
 let magnetCounter = 1;
+let animating = false;
+let animTarget = 0;
+let animAccum = 0;
+let animLastTime = 0;
+let animRaf: number | null = null;
 
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const magnetLayer = document.getElementById("magnet-layer") as HTMLElement;
 const magnetListEl = document.getElementById("magnet-list") as HTMLElement;
 const panelEl = document.getElementById("ui-panel") as HTMLElement;
 const panelHandleEl = document.getElementById("panel-handle") as HTMLElement;
+const animateBtn = document.getElementById("animate-sim") as HTMLButtonElement | null;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setClearColor(0xffffff, 1);
@@ -180,6 +187,7 @@ function seedSimulation() {
 }
 
 function copyFromBase() {
+  stopAnimation();
   if (!baseState) return;
   copyMaterial.uniforms.source.value = baseState.texture;
   for (let i = 0; i < simTargets.length; i++) {
@@ -253,6 +261,57 @@ function restartAndReplay() {
 function reseedAndReplay() {
   seedSimulation();
   goToIterations(params.iterations);
+}
+
+function stopAnimation() {
+  if (animRaf !== null) {
+    cancelAnimationFrame(animRaf);
+    animRaf = null;
+  }
+  animating = false;
+  animAccum = 0;
+  animLastTime = 0;
+  if (animateBtn) {
+    animateBtn.textContent = "Animate Simulation";
+  }
+}
+
+function animateStep(timestamp: number) {
+  if (!animating) return;
+  if (animLastTime === 0) {
+    animLastTime = timestamp;
+  }
+  const dt = timestamp - animLastTime;
+  animLastTime = timestamp;
+  animAccum += (dt / 1000) * 30;
+  const desired = Math.min(animTarget, Math.floor(animAccum));
+  if (desired > currentSteps) {
+    stepSimulation(desired - currentSteps);
+    params.iterations = currentSteps;
+    setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
+  }
+  if (currentSteps >= animTarget) {
+    stopAnimation();
+    return;
+  }
+  animRaf = requestAnimationFrame(animateStep);
+}
+
+function startAnimation() {
+  stopAnimation();
+  copyFromBase();
+  animating = true;
+  animTarget = MAX_ITERATIONS;
+  animAccum = Math.max(currentSteps, Math.floor(params.iterations));
+  params.iterations = animTarget;
+  setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
+  // ensure state matches starting point
+  goToIterations(Math.floor(animAccum));
+  animLastTime = 0;
+  if (animateBtn) {
+    animateBtn.textContent = "Stop Animation";
+  }
+  animRaf = requestAnimationFrame(animateStep);
 }
 
 function recreateSimulation(resolution: number) {
@@ -507,6 +566,7 @@ function setupUI() {
     "seed",
     (v) => {
       seedMaterial.uniforms.seed.value = v;
+      stopAnimation();
       reseedAndReplay();
       scheduleSave();
     },
@@ -518,6 +578,7 @@ function setupUI() {
     (v) => {
       params.percentage = v;
       seedMaterial.uniforms.percentage.value = v * 0.01;
+      stopAnimation();
       reseedAndReplay();
     },
     (v) => v.toFixed(0),
@@ -527,6 +588,7 @@ function setupUI() {
     "feed",
     (v) => {
       params.feed = v;
+      stopAnimation();
       copyFromBase();
       goToIterations(params.iterations);
     },
@@ -537,6 +599,7 @@ function setupUI() {
     "kill",
     (v) => {
       params.kill = v;
+      stopAnimation();
       copyFromBase();
       goToIterations(params.iterations);
     },
@@ -547,6 +610,7 @@ function setupUI() {
     "du",
     (v) => {
       params.du = v;
+      stopAnimation();
       copyFromBase();
       goToIterations(params.iterations);
     },
@@ -557,6 +621,7 @@ function setupUI() {
     "dv",
     (v) => {
       params.dv = v;
+      stopAnimation();
       copyFromBase();
       goToIterations(params.iterations);
     },
@@ -576,6 +641,7 @@ function setupUI() {
     "threshold",
     (v) => {
       params.fieldThreshold = v;
+      stopAnimation();
       copyFromBase();
       goToIterations(params.iterations);
     },
@@ -592,11 +658,11 @@ function setupUI() {
     recreateSimulation(DEFAULT_RES);
     setSliderValue("resolution", DEFAULT_RES, (v) => v.toFixed(0));
     setSliderValue("seed", DEFAULT_SEED, (v) => v.toFixed(0));
-  seedMaterial.uniforms.percentage.value = DEFAULT_PARAMS.percentage * 0.01;
-  setSliderValue("percentage", params.percentage, (v) => v.toFixed(0));
-  setSliderValue("feed", params.feed, (v) => v.toFixed(4));
-  setSliderValue("kill", params.kill, (v) => v.toFixed(4));
-  setSliderValue("du", params.du, (v) => v.toFixed(3));
+    seedMaterial.uniforms.percentage.value = DEFAULT_PARAMS.percentage * 0.01;
+    setSliderValue("percentage", params.percentage, (v) => v.toFixed(0));
+    setSliderValue("feed", params.feed, (v) => v.toFixed(4));
+    setSliderValue("kill", params.kill, (v) => v.toFixed(4));
+    setSliderValue("du", params.du, (v) => v.toFixed(3));
     setSliderValue("dv", params.dv, (v) => v.toFixed(3));
     setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
     setSliderValue("threshold", params.fieldThreshold, (v) => v.toFixed(2));
@@ -608,6 +674,13 @@ function setupUI() {
   });
   addMagnetBtn?.addEventListener("click", () => {
     addMagnet();
+  });
+  animateBtn?.addEventListener("click", () => {
+    if (animating) {
+      stopAnimation();
+    } else {
+      startAnimation();
+    }
   });
 
   let lastPointerId: number | null = null;
