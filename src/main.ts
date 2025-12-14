@@ -28,6 +28,7 @@ const DEFAULT_PARAMS = {
   iterations: 39,
   fieldThreshold: 0.62
 };
+const DEFAULT_SEED = 735;
 const STORAGE_KEY = "ferrofluid-fields-state-v1";
 
 let params = { ...DEFAULT_PARAMS };
@@ -86,7 +87,7 @@ const seedMaterial = new THREE.ShaderMaterial({
   vertexShader: screenVertex,
   fragmentShader: seedFragment,
   uniforms: {
-    seed: { value: Math.random() * 999.0 }
+    seed: { value: DEFAULT_SEED }
   }
 });
 
@@ -448,9 +449,8 @@ function setupUI() {
   const addMagnetBtn = document.getElementById("add-magnet");
   resetBtn?.addEventListener("click", () => {
     params = { ...DEFAULT_PARAMS };
-    const newSeed = Math.random() * 999.0;
-    seedMaterial.uniforms.seed.value = newSeed;
-    setSliderValue("seed", Math.floor(newSeed), (v) => v.toFixed(0));
+    seedMaterial.uniforms.seed.value = DEFAULT_SEED;
+    setSliderValue("seed", DEFAULT_SEED, (v) => v.toFixed(0));
     setSliderValue("feed", params.feed, (v) => v.toFixed(4));
     setSliderValue("kill", params.kill, (v) => v.toFixed(4));
     setSliderValue("du", params.du, (v) => v.toFixed(3));
