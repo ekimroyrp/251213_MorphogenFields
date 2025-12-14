@@ -423,6 +423,8 @@ function setupUI() {
     "seed",
     (v) => {
       seedMaterial.uniforms.seed.value = v;
+      simIndex = 0;
+      seedSimulation();
       queueSimulation(params.iterations);
       scheduleSave();
     },
