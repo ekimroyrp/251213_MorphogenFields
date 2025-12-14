@@ -162,6 +162,17 @@
     color: #1e1e20;
   }
 
+  .field .value-input {
+    justify-self: end;
+    width: 78px;
+    padding: 4px 6px;
+    font-size: 0.78rem;
+    text-align: right;
+    border: 1px solid #0d0d0f;
+    background: linear-gradient(135deg, #e8e8eb, #d4d4d8);
+    color: #111;
+  }
+
   .row {
     display: flex;
     gap: 8px;

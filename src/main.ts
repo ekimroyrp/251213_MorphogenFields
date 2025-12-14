@@ -569,13 +569,16 @@ function bindSlider(
   initialValue?: number
 ) {
   const input = document.getElementById(id) as HTMLInputElement;
-  const output = document.getElementById(`${id}-val`) as HTMLOutputElement;
+  const output = document.getElementById(`${id}-val`) as HTMLInputElement;
   if (initialValue !== undefined) {
     input.value = initialValue.toString();
   }
+  if (output) {
+    output.value = (initialValue ?? parseFloat(output.value)).toString();
+  }
   const update = (value: number) => {
     if (output) {
-      output.textContent = formatter ? formatter(value) : value.toFixed(4);
+      output.value = formatter ? formatter(value) : value.toFixed(4);
     }
     onChange(value);
   };
@@ -584,15 +587,25 @@ function bindSlider(
     update(v);
     scheduleSave();
   });
+  if (output) {
+    output.addEventListener("change", () => {
+      const v = parseFloat(output.value);
+      const min = input.min ? parseFloat(input.min) : -Infinity;
+      const max = input.max ? parseFloat(input.max) : Infinity;
+      const clamped = Math.min(max, Math.max(min, v));
+      input.value = clamped.toString();
+      update(clamped);
+    });
+  }
   update(parseFloat(input.value));
 }
 
 function setSliderValue(id: string, value: number, formatter?: (v: number) => string) {
   const input = document.getElementById(id) as HTMLInputElement;
-  const output = document.getElementById(`${id}-val`) as HTMLOutputElement;
+  const output = document.getElementById(`${id}-val`) as HTMLInputElement;
   input.value = value.toString();
   if (output) {
-    output.textContent = formatter ? formatter(value) : value.toFixed(4);
+    output.value = formatter ? formatter(value) : value.toFixed(4);
   }
 }
 

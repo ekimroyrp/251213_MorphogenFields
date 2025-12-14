@@ -19,7 +19,7 @@
           <label class="field">
             <span>Iterations</span>
             <input id="iterations" type="range" min="0" max="6000" step="1" value="0" />
-            <output id="iterations-val">0</output>
+            <input id="iterations-val" class="value-input" type="number" min="0" max="6000" step="1" value="0" />
           </label>
           <div class="row">
             <button id="rewind-sim" class="full">&lt;&lt; Rewind</button>
@@ -31,42 +31,42 @@
           <label class="field">
             <span>Resolution</span>
             <input id="resolution" type="range" min="128" max="2048" step="64" value="512" />
-            <output id="resolution-val">512</output>
+            <input id="resolution-val" class="value-input" type="number" min="128" max="2048" step="64" value="512" />
           </label>
           <label class="field">
             <span>Percentage</span>
             <input id="percentage" type="range" min="1" max="100" step="1" value="25" />
-            <output id="percentage-val">25</output>
+            <input id="percentage-val" class="value-input" type="number" min="1" max="100" step="1" value="25" />
           </label>
           <label class="field">
             <span>Seed</span>
             <input id="seed" type="range" min="0" max="999" step="1" value="0" />
-            <output id="seed-val">0</output>
+            <input id="seed-val" class="value-input" type="number" min="0" max="999" step="1" value="0" />
           </label>
           <label class="field">
             <span>Feed</span>
             <input id="feed" type="range" min="0.0" max="0.2" step="0.0005" value="0.0785" />
-            <output id="feed-val">0.0785</output>
+            <input id="feed-val" class="value-input" type="number" min="0.0" max="0.2" step="0.0005" value="0.0785" />
           </label>
           <label class="field">
             <span>Kill</span>
             <input id="kill" type="range" min="0.0" max="0.1" step="0.0005" value="0.011" />
-            <output id="kill-val">0.0110</output>
+            <input id="kill-val" class="value-input" type="number" min="0.0" max="0.1" step="0.0005" value="0.0110" />
           </label>
           <label class="field">
             <span>Diffusion U</span>
             <input id="du" type="range" min="0.01" max="0.4" step="0.001" value="0.195" />
-            <output id="du-val">0.195</output>
+            <input id="du-val" class="value-input" type="number" min="0.01" max="0.4" step="0.001" value="0.195" />
           </label>
           <label class="field">
             <span>Diffusion V</span>
             <input id="dv" type="range" min="0.01" max="0.4" step="0.001" value="0.255" />
-            <output id="dv-val">0.255</output>
+            <input id="dv-val" class="value-input" type="number" min="0.01" max="0.4" step="0.001" value="0.255" />
           </label>
           <label class="field">
             <span>Threshold</span>
             <input id="threshold" type="range" min="0.0" max="3.0" step="0.01" value="0.14" />
-            <output id="threshold-val">0.14</output>
+            <input id="threshold-val" class="value-input" type="number" min="0.0" max="3.0" step="0.01" value="0.14" />
           </label>
           <div class="row">
             <button id="reset-sim" class="accent full">Reset Variables</button>
