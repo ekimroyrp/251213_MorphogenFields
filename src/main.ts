@@ -25,7 +25,7 @@ const DEFAULT_PARAMS = {
   du: 0.195,
   dv: 0.255,
   dt: 1.0,
-  iterations: 39,
+  iterations: 1,
   fieldThreshold: 0.62
 };
 const DEFAULT_SEED = 735;
@@ -404,7 +404,6 @@ function bindSlider(
   input.addEventListener("input", () => {
     const v = parseFloat(input.value);
     update(v);
-    queueSimulation(params.iterations);
     scheduleSave();
   });
   update(parseFloat(input.value));
@@ -426,7 +425,8 @@ function setupUI() {
       seedMaterial.uniforms.seed.value = v;
       simIndex = 0;
       seedSimulation();
-      queueSimulation(params.iterations);
+      params.iterations = DEFAULT_PARAMS.iterations;
+      setSliderValue("iterations", params.iterations, (val) => val.toFixed(0));
       scheduleSave();
     },
     (v) => v.toFixed(0),
@@ -436,7 +436,15 @@ function setupUI() {
   bindSlider("kill", (v) => (params.kill = v), (v) => v.toFixed(4), params.kill);
   bindSlider("du", (v) => (params.du = v), (v) => v.toFixed(3), params.du);
   bindSlider("dv", (v) => (params.dv = v), (v) => v.toFixed(3), params.dv);
-  bindSlider("iterations", (v) => (params.iterations = v), (v) => v.toFixed(0), params.iterations);
+  bindSlider(
+    "iterations",
+    (v) => {
+      params.iterations = v;
+      queueSimulation(params.iterations);
+    },
+    (v) => v.toFixed(0),
+    params.iterations
+  );
   bindSlider(
     "threshold",
     (v) => (params.fieldThreshold = v),
@@ -458,7 +466,6 @@ function setupUI() {
     setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
     setSliderValue("threshold", params.fieldThreshold, (v) => v.toFixed(2));
     seedSimulation();
-    queueSimulation(params.iterations);
     scheduleSave();
   });
   clearBtn?.addEventListener("click", () => {
@@ -506,7 +513,7 @@ function setupUI() {
 function loadOrInitialize() {
   const saved = loadState();
   if (saved?.params) {
-    params = { ...params, ...saved.params };
+    params = { ...params, ...saved.params, iterations: DEFAULT_PARAMS.iterations };
   }
   // Position panel before display to avoid jump
   if (saved?.panel) {
