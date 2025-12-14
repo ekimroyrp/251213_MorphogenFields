@@ -391,6 +391,17 @@ function syncMagnetUniforms() {
   }
 }
 
+function setMagnetActive(magnet: Magnet, active: boolean, rerenderList = false) {
+  if (magnet.active === active) return;
+  magnet.active = active;
+  magnet.handle?.classList.toggle("inactive", !magnet.active);
+  syncMagnetUniforms();
+  copyFromBase();
+  goToIterations(params.iterations);
+  scheduleSave();
+  if (rerenderList) renderMagnetList();
+}
+
 function handleCanvasPointerDown(ev: PointerEvent) {
   // Only left click to add a magnet
   if (ev.button !== 0) return;
@@ -452,11 +463,17 @@ function createMagnetHandle(magnet: Magnet) {
   el.appendChild(thirdPulse);
   magnetLayer.appendChild(el);
   magnet.handle = el;
+  el.classList.toggle("inactive", !magnet.active);
   positionMagnetHandle(magnet);
 
   const onPointerDown = (ev: PointerEvent) => {
     ev.preventDefault();
     ev.stopPropagation();
+    if (ev.button === 1) {
+      setMagnetActive(magnet, !magnet.active, true);
+      return;
+    }
+    if (ev.button !== 0) return;
     draggingMagnet = magnet;
     el.classList.add("dragging");
     window.addEventListener("pointermove", onPointerMove);
@@ -620,12 +637,8 @@ function renderMagnetList() {
     };
     updateToggle();
     toggleBtn.addEventListener("click", () => {
-      magnet.active = !magnet.active;
+      setMagnetActive(magnet, !magnet.active);
       updateToggle();
-      syncMagnetUniforms();
-      copyFromBase();
-      goToIterations(params.iterations);
-      scheduleSave();
     });
     toggleRow.append(toggleLabel, toggleBtn);
 
@@ -875,16 +888,13 @@ function loadOrInitialize() {
   if (saved?.magnets?.length) {
     saved.magnets.forEach((m) => {
       const pos = new THREE.Vector2(clamp01(m.pos[0]), clamp01(m.pos[1]));
-      const mag = addMagnet({
+      addMagnet({
         label: m.label,
         pos,
         strength: m.strength,
         radius: m.radius,
         active: m.active ?? true
       });
-      if (mag?.handle && !(m.active ?? true)) {
-        mag.handle.classList.add("inactive");
-      }
     });
     magnetCounter = saved.magnets.length + 1;
   }
