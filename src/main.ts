@@ -382,6 +382,13 @@ function syncMagnetUniforms() {
   }
 }
 
+function handleCanvasPointerDown(ev: PointerEvent) {
+  // Only left click to add a magnet
+  if (ev.button !== 0) return;
+  const pos = screenToUv(ev);
+  addMagnet({ pos });
+}
+
 function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "label">>) {
   if (magnets.length >= MAGNET_MAX) return;
   const magnet: Magnet = {
@@ -433,6 +440,7 @@ function createMagnetHandle(magnet: Magnet) {
 
   const onPointerDown = (ev: PointerEvent) => {
     ev.preventDefault();
+    ev.stopPropagation();
     draggingMagnet = magnet;
     el.classList.add("dragging");
     window.addEventListener("pointermove", onPointerMove);
@@ -462,6 +470,10 @@ function createMagnetHandle(magnet: Magnet) {
   };
 
   el.addEventListener("pointerdown", onPointerDown);
+  el.addEventListener("contextmenu", (ev) => {
+    ev.preventDefault();
+    removeMagnet(magnet.id);
+  });
 }
 
 function positionMagnetHandle(magnet: Magnet) {
@@ -475,6 +487,13 @@ function positionMagnetHandle(magnet: Magnet) {
 
 function positionMagnetHandles() {
   magnets.forEach(positionMagnetHandle);
+}
+
+function screenToUv(ev: PointerEvent) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) / rect.width;
+  const y = (ev.clientY - rect.top) / rect.height;
+  return new THREE.Vector2(Math.min(Math.max(x, 0), 1), Math.min(Math.max(1 - y, 0), 1));
 }
 
 function renderMagnetList() {
@@ -790,6 +809,8 @@ function init() {
   window.addEventListener("resize", resize);
   loadOrInitialize();
   setupUI();
+  renderer.domElement.addEventListener("pointerdown", handleCanvasPointerDown);
+  renderer.domElement.addEventListener("contextmenu", (ev) => ev.preventDefault());
   seedSimulation();
   queueSimulation(params.iterations);
   renderer.setAnimationLoop(renderFrame);
