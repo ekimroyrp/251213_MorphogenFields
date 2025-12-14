@@ -694,6 +694,19 @@ function setSliderValue(id: string, value: number, formatter?: (v: number) => st
   }
 }
 
+function setupCollapsibleSections() {
+  document.querySelectorAll<HTMLElement>(".panel-section").forEach((section) => {
+    const title = section.querySelector<HTMLElement>(".section-title");
+    if (!title) return;
+    title.setAttribute("role", "button");
+    title.setAttribute("aria-expanded", section.classList.contains("collapsed") ? "false" : "true");
+    title.addEventListener("click", () => {
+      const collapsed = section.classList.toggle("collapsed");
+      title.setAttribute("aria-expanded", (!collapsed).toString());
+    });
+  });
+}
+
 function setupUI() {
   bindSlider(
     "resolution",
@@ -908,6 +921,7 @@ function init() {
   window.addEventListener("resize", resize);
   loadOrInitialize();
   setupUI();
+  setupCollapsibleSections();
   renderer.domElement.addEventListener("pointerdown", handleCanvasPointerDown);
   renderer.domElement.addEventListener("contextmenu", (ev) => ev.preventDefault());
   seedSimulation();
