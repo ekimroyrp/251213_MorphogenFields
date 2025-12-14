@@ -55,11 +55,27 @@
     width: 18px;
     height: 18px;
     margin: -9px 0 0 -9px;
-    border: 1px solid #0d0d0f;
+    border: 1px solid #ff7a1a;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2c2c30, #0f0f11);
-    box-shadow: 0 0 0 1px rgba(255, 109, 28, 0.6), 0 8px 20px rgba(0, 0, 0, 0.35);
+    background: linear-gradient(135deg, #ff9f4d, #ff7a1a);
+    box-shadow:
+      0 0 0 2px rgba(255, 122, 26, 0.4),
+      0 0 12px 4px rgba(255, 122, 26, 0.35),
+      0 8px 20px rgba(0, 0, 0, 0.35);
     cursor: grab;
+    animation: magnet-glow 2s ease-in-out infinite;
+  }
+
+  .magnet-handle::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 122, 26, 0.65);
+    opacity: 0;
+    transform: scale(0.8);
+    animation: magnet-pulse 2s ease-out infinite;
+    pointer-events: none;
   }
 
   .magnet-handle::after {
@@ -73,6 +89,46 @@
   .magnet-handle.dragging {
     cursor: grabbing;
     box-shadow: 0 0 0 1px rgba(255, 140, 0, 0.9), 0 10px 24px rgba(0, 0, 0, 0.45);
+    animation: none;
+  }
+
+  @keyframes magnet-pulse {
+    0% {
+      opacity: 0.55;
+      transform: scale(0.9);
+      border-width: 1px;
+    }
+    70% {
+      opacity: 0.2;
+      transform: scale(2.2);
+      border-width: 1px;
+    }
+    100% {
+      opacity: 0;
+      transform: scale(2.5);
+      border-width: 1px;
+    }
+  }
+
+  @keyframes magnet-glow {
+    0% {
+      box-shadow:
+        0 0 0 2px rgba(255, 122, 26, 0.4),
+        0 0 12px 4px rgba(255, 122, 26, 0.35),
+        0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+    50% {
+      box-shadow:
+        0 0 0 3px rgba(255, 122, 26, 0.5),
+        0 0 18px 8px rgba(255, 122, 26, 0.45),
+        0 10px 24px rgba(0, 0, 0, 0.38);
+    }
+    100% {
+      box-shadow:
+        0 0 0 2px rgba(255, 122, 26, 0.4),
+        0 0 12px 4px rgba(255, 122, 26, 0.35),
+        0 8px 20px rgba(0, 0, 0, 0.35);
+    }
   }
 }
 
