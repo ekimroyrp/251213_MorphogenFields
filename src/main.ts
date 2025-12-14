@@ -409,6 +409,15 @@ function bindSlider(
   update(parseFloat(input.value));
 }
 
+function setSliderValue(id: string, value: number, formatter?: (v: number) => string) {
+  const input = document.getElementById(id) as HTMLInputElement;
+  const output = document.getElementById(`${id}-val`) as HTMLOutputElement;
+  input.value = value.toString();
+  if (output) {
+    output.textContent = formatter ? formatter(value) : value.toFixed(4);
+  }
+}
+
 function setupUI() {
   bindSlider(
     "seed",
@@ -432,8 +441,24 @@ function setupUI() {
     params.fieldThreshold
   );
 
+  const resetBtn = document.getElementById("reset-sim");
   const clearBtn = document.getElementById("clear-btn");
   const addMagnetBtn = document.getElementById("add-magnet");
+  resetBtn?.addEventListener("click", () => {
+    params = { ...DEFAULT_PARAMS };
+    const newSeed = Math.random() * 999.0;
+    seedMaterial.uniforms.seed.value = newSeed;
+    setSliderValue("seed", Math.floor(newSeed), (v) => v.toFixed(0));
+    setSliderValue("feed", params.feed, (v) => v.toFixed(4));
+    setSliderValue("kill", params.kill, (v) => v.toFixed(4));
+    setSliderValue("du", params.du, (v) => v.toFixed(3));
+    setSliderValue("dv", params.dv, (v) => v.toFixed(3));
+    setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
+    setSliderValue("threshold", params.fieldThreshold, (v) => v.toFixed(2));
+    seedSimulation();
+    queueSimulation(params.iterations);
+    scheduleSave();
+  });
   clearBtn?.addEventListener("click", () => {
     clearMagnets();
   });
