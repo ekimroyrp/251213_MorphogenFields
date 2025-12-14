@@ -328,6 +328,14 @@
     box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.6);
   }
 
+  #animate-sim.stop,
+  #rewind-sim.stop {
+    background: linear-gradient(135deg, #ff9f4d, #ff7a1a);
+    color: #0c0c0d;
+    border: 1px solid #000;
+    box-shadow: none;
+  }
+
   #rewind-sim {
     border-color: #ff7a1a;
     box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.6);

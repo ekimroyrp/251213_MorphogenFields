@@ -284,9 +284,11 @@ function stopAnimation() {
   animLastTime = 0;
   if (animateBtn) {
     animateBtn.textContent = "Play >>";
+    animateBtn.classList.remove("stop");
   }
   if (rewindBtn) {
     rewindBtn.textContent = "<< Rewind";
+    rewindBtn.classList.remove("stop");
   }
 }
 
@@ -338,10 +340,20 @@ function startAnimation() {
   animLastTime = 0;
   if (animDirection === 1) {
     if (animateBtn) animateBtn.textContent = "Stop";
-    if (rewindBtn) rewindBtn.textContent = "<< Rewind";
+    if (animateBtn) animateBtn.classList.add("stop");
+    if (rewindBtn) {
+      rewindBtn.textContent = "<< Rewind";
+      rewindBtn.classList.remove("stop");
+    }
   } else {
-    if (rewindBtn) rewindBtn.textContent = "Stop";
-    if (animateBtn) animateBtn.textContent = "Play >>";
+    if (rewindBtn) {
+      rewindBtn.textContent = "Stop";
+      rewindBtn.classList.add("stop");
+    }
+    if (animateBtn) {
+      animateBtn.textContent = "Play >>";
+      animateBtn.classList.remove("stop");
+    }
   }
   animRaf = requestAnimationFrame(animateStep);
 }
