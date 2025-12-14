@@ -115,6 +115,7 @@ let panelDragStart: { x: number; y: number; left: number; top: number } | null =
 let pendingIterations = 0;
 let scheduledStep = false;
 let saveTimer: number | null = null;
+let currentSteps = 0;
 
 function scheduleSave() {
   if (saveTimer) {
@@ -153,11 +154,13 @@ function loadState(): SavedState | null {
 }
 
 function seedSimulation() {
+  simIndex = 0;
   renderer.setRenderTarget(simTargets[simIndex]);
   renderer.render(seedScene, simCamera);
   renderer.setRenderTarget(simTargets[1 - simIndex]);
   renderer.render(seedScene, simCamera);
   renderer.setRenderTarget(null);
+  currentSteps = 0;
   syncDisplayTexture();
 }
 
@@ -181,6 +184,7 @@ function stepSimulation(iterations: number) {
   }
   renderer.setRenderTarget(null);
   syncDisplayTexture();
+  currentSteps += steps;
 }
 
 function queueSimulation(iterations: number) {
@@ -200,6 +204,22 @@ function syncDisplayTexture() {
 
 function renderFrame() {
   renderer.render(displayScene, displayCamera);
+}
+
+function goToIterations(target: number) {
+  const clamped = Math.max(0, Math.floor(target));
+  if (clamped < currentSteps) {
+    seedSimulation();
+  }
+  const needed = clamped - currentSteps;
+  if (needed > 0) {
+    stepSimulation(needed);
+  }
+}
+
+function restartAndReplay() {
+  seedSimulation();
+  goToIterations(params.iterations);
 }
 
 function resize() {
@@ -423,31 +443,63 @@ function setupUI() {
     "seed",
     (v) => {
       seedMaterial.uniforms.seed.value = v;
-      simIndex = 0;
-      seedSimulation();
-      params.iterations = DEFAULT_PARAMS.iterations;
-      setSliderValue("iterations", params.iterations, (val) => val.toFixed(0));
+      restartAndReplay();
       scheduleSave();
     },
     (v) => v.toFixed(0),
     Math.floor(seedMaterial.uniforms.seed.value)
   );
-  bindSlider("feed", (v) => (params.feed = v), (v) => v.toFixed(4), params.feed);
-  bindSlider("kill", (v) => (params.kill = v), (v) => v.toFixed(4), params.kill);
-  bindSlider("du", (v) => (params.du = v), (v) => v.toFixed(3), params.du);
-  bindSlider("dv", (v) => (params.dv = v), (v) => v.toFixed(3), params.dv);
+  bindSlider(
+    "feed",
+    (v) => {
+      params.feed = v;
+      restartAndReplay();
+    },
+    (v) => v.toFixed(4),
+    params.feed
+  );
+  bindSlider(
+    "kill",
+    (v) => {
+      params.kill = v;
+      restartAndReplay();
+    },
+    (v) => v.toFixed(4),
+    params.kill
+  );
+  bindSlider(
+    "du",
+    (v) => {
+      params.du = v;
+      restartAndReplay();
+    },
+    (v) => v.toFixed(3),
+    params.du
+  );
+  bindSlider(
+    "dv",
+    (v) => {
+      params.dv = v;
+      restartAndReplay();
+    },
+    (v) => v.toFixed(3),
+    params.dv
+  );
   bindSlider(
     "iterations",
     (v) => {
       params.iterations = v;
-      queueSimulation(params.iterations);
+      goToIterations(params.iterations);
     },
     (v) => v.toFixed(0),
     params.iterations
   );
   bindSlider(
     "threshold",
-    (v) => (params.fieldThreshold = v),
+    (v) => {
+      params.fieldThreshold = v;
+      restartAndReplay();
+    },
     (v) => v.toFixed(2),
     params.fieldThreshold
   );
