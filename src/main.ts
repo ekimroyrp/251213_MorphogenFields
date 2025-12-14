@@ -523,16 +523,32 @@ function renderMagnetList() {
     strengthRange.max = "3.0";
     strengthRange.step = "0.05";
     strengthRange.value = magnet.strength.toFixed(2);
-    const strengthReadout = document.createElement("span");
-    strengthReadout.textContent = magnet.strength.toFixed(2);
+    const strengthReadout = document.createElement("input");
+    strengthReadout.type = "number";
+    strengthReadout.className = "value-input";
+    strengthReadout.min = "0.1";
+    strengthReadout.max = "3.0";
+    strengthReadout.step = "0.05";
+    strengthReadout.value = magnet.strength.toFixed(2);
     strengthRange.addEventListener("input", () => {
       magnet.strength = parseFloat(strengthRange.value);
-      strengthReadout.textContent = magnet.strength.toFixed(2);
-    syncMagnetUniforms();
-    copyFromBase();
-    goToIterations(params.iterations);
-    scheduleSave();
-  });
+      strengthReadout.value = magnet.strength.toFixed(2);
+      syncMagnetUniforms();
+      copyFromBase();
+      goToIterations(params.iterations);
+      scheduleSave();
+    });
+    strengthReadout.addEventListener("change", () => {
+      const val = parseFloat(strengthReadout.value);
+      const clamped = Math.min(3.0, Math.max(0.1, val));
+      magnet.strength = clamped;
+      strengthRange.value = magnet.strength.toFixed(2);
+      strengthReadout.value = magnet.strength.toFixed(2);
+      syncMagnetUniforms();
+      copyFromBase();
+      goToIterations(params.iterations);
+      scheduleSave();
+    });
     strengthRow.append(strengthLabel, strengthRange, strengthReadout);
 
     const radiusRow = document.createElement("div");
@@ -546,13 +562,30 @@ function renderMagnetList() {
     radiusRange.max = "1.0";
     radiusRange.step = "0.01";
     radiusRange.value = magnet.radius.toFixed(2);
-    const radiusReadout = document.createElement("span");
-    radiusReadout.textContent = magnet.radius.toFixed(2);
+    const radiusReadout = document.createElement("input");
+    radiusReadout.type = "number";
+    radiusReadout.className = "value-input";
+    radiusReadout.min = "0.05";
+    radiusReadout.max = "1.0";
+    radiusReadout.step = "0.01";
+    radiusReadout.value = magnet.radius.toFixed(2);
     radiusRange.addEventListener("input", () => {
       magnet.radius = parseFloat(radiusRange.value);
-      radiusReadout.textContent = magnet.radius.toFixed(2);
+      radiusReadout.value = magnet.radius.toFixed(2);
       syncMagnetUniforms();
-      restartAndReplay();
+      copyFromBase();
+      goToIterations(params.iterations);
+      scheduleSave();
+    });
+    radiusReadout.addEventListener("change", () => {
+      const val = parseFloat(radiusReadout.value);
+      const clamped = Math.min(1.0, Math.max(0.05, val));
+      magnet.radius = clamped;
+      radiusRange.value = magnet.radius.toFixed(2);
+      radiusReadout.value = magnet.radius.toFixed(2);
+      syncMagnetUniforms();
+      copyFromBase();
+      goToIterations(params.iterations);
       scheduleSave();
     });
     radiusRow.append(radiusLabel, radiusRange, radiusReadout);
