@@ -227,6 +227,14 @@
     padding-left: 8px;
   }
 
+  .section-note {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: #1b1b1d;
+    margin-top: -4px;
+    margin-bottom: -2px;
+  }
+
   .field {
     display: grid;
     grid-template-columns: 1fr 1.2fr 0.8fr;
