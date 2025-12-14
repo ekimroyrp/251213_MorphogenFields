@@ -81,9 +81,27 @@
   .magnet-handle::after {
     content: "";
     position: absolute;
-    inset: 6px;
+    inset: -6px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 122, 26, 0.35);
+    opacity: 0;
+    transform: scale(0.6);
+    animation: magnet-pulse 2s ease-out infinite;
+    animation-delay: 0.66s;
+    pointer-events: none;
+  }
+
+  .magnet-handle .pulse-third {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 122, 26, 0.2);
+    opacity: 0;
+    transform: scale(0.4);
+    animation: magnet-pulse 2s ease-out infinite;
+    animation-delay: 1.32s;
+    pointer-events: none;
   }
 
   .magnet-handle.dragging {

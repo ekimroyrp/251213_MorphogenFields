@@ -434,6 +434,9 @@ function clearMagnets() {
 function createMagnetHandle(magnet: Magnet) {
   const el = document.createElement("div");
   el.className = "magnet-handle";
+  const thirdPulse = document.createElement("div");
+  thirdPulse.className = "pulse-third";
+  el.appendChild(thirdPulse);
   magnetLayer.appendChild(el);
   magnet.handle = el;
   positionMagnetHandle(magnet);
