@@ -10,6 +10,7 @@ export const seedFragment = /* glsl */ `
 precision highp float;
 varying vec2 vUv;
 uniform float seed;
+uniform float percentage;
 
 float hash(vec2 p) {
   p = fract(p * vec2(123.34, 345.45));
@@ -20,7 +21,8 @@ float hash(vec2 p) {
 void main() {
   float n = hash(vUv * (seed + 1.0));
   float center = smoothstep(0.35, 0.0, length(vUv - 0.5));
-  float vSeed = step(0.9975, n) + center * 0.6;
+  float cutoff = 1.0 - clamp(percentage * 0.01, 0.0, 1.0);
+  float vSeed = step(cutoff, n) + center * 0.6;
   float u = 1.0 - vSeed * 0.5;
   float v = vSeed * 0.9;
   gl_FragColor = vec4(u, v, 0.0, 1.0);

@@ -17,6 +17,16 @@
         <div class="panel-section">
           <div class="section-title">Simulation</div>
           <label class="field">
+            <span>Resolution</span>
+            <input id="resolution" type="range" min="128" max="2048" step="64" value="512" />
+            <output id="resolution-val">512</output>
+          </label>
+          <label class="field">
+            <span>Percentage</span>
+            <input id="percentage" type="range" min="1" max="100" step="1" value="25" />
+            <output id="percentage-val">25</output>
+          </label>
+          <label class="field">
             <span>Seed</span>
             <input id="seed" type="range" min="0" max="999" step="1" value="0" />
             <output id="seed-val">0</output>

@@ -18,7 +18,8 @@ type SavedState = {
 };
 
 const MAGNET_MAX = 16;
-const SIM_RES = 512;
+const DEFAULT_RES = 512;
+let simRes = DEFAULT_RES;
 const DEFAULT_PARAMS = {
   feed: 0.0785,
   kill: 0.011,
@@ -26,7 +27,8 @@ const DEFAULT_PARAMS = {
   dv: 0.255,
   dt: 1.0,
   iterations: 1,
-  fieldThreshold: 0.62
+  fieldThreshold: 0.62,
+  percentage: 25
 };
 const DEFAULT_SEED = 735;
 const STORAGE_KEY = "ferrofluid-fields-state-v1";
@@ -51,8 +53,8 @@ const simScene = new THREE.Scene();
 const seedScene = new THREE.Scene();
 const displayScene = new THREE.Scene();
 
-const makeTarget = () =>
-  new THREE.WebGLRenderTarget(SIM_RES, SIM_RES, {
+const makeTarget = (res: number) =>
+  new THREE.WebGLRenderTarget(res, res, {
     type: THREE.FloatType,
     format: THREE.RGBAFormat,
     depthBuffer: false,
@@ -61,7 +63,7 @@ const makeTarget = () =>
     magFilter: THREE.NearestFilter
   });
 
-const simTargets = [makeTarget(), makeTarget()];
+let simTargets = [makeTarget(simRes), makeTarget(simRes)];
 let simIndex = 0;
 
 const magnetUniforms = Array.from({ length: MAGNET_MAX }, () => new THREE.Vector4());
@@ -79,7 +81,7 @@ const stepMaterial = new THREE.ShaderMaterial({
     fieldThreshold: { value: params.fieldThreshold },
     magnetCount: { value: 0 },
     magnetData: { value: magnetUniforms },
-    resolution: { value: new THREE.Vector2(SIM_RES, SIM_RES) }
+    resolution: { value: new THREE.Vector2(simRes, simRes) }
   }
 });
 
@@ -87,7 +89,8 @@ const seedMaterial = new THREE.ShaderMaterial({
   vertexShader: screenVertex,
   fragmentShader: seedFragment,
   uniforms: {
-    seed: { value: Math.random() * 999.0 }
+    seed: { value: Math.random() * 999.0 },
+    percentage: { value: DEFAULT_PARAMS.percentage * 0.01 }
   }
 });
 
@@ -96,7 +99,7 @@ const displayMaterial = new THREE.ShaderMaterial({
   fragmentShader: displayFragment,
   uniforms: {
     stateTex: { value: simTargets[0].texture },
-    resolution: { value: new THREE.Vector2(SIM_RES, SIM_RES) }
+    resolution: { value: new THREE.Vector2(simRes, simRes) }
   }
 });
 
@@ -220,6 +223,21 @@ function goToIterations(target: number) {
 function restartAndReplay() {
   seedSimulation();
   goToIterations(params.iterations);
+}
+
+function recreateSimulation(resolution: number) {
+  const nextRes = Math.max(128, Math.min(2048, Math.floor(resolution)));
+  if (nextRes === simRes) return;
+  simTargets.forEach((t) => t.dispose());
+  simRes = nextRes;
+  const newTargets = [makeTarget(simRes), makeTarget(simRes)];
+  simTargets = newTargets;
+  simIndex = 0;
+  stepMaterial.uniforms.prevState.value = simTargets[0].texture;
+  stepMaterial.uniforms.resolution.value.set(simRes, simRes);
+  displayMaterial.uniforms.stateTex.value = simTargets[0].texture;
+  displayMaterial.uniforms.resolution.value.set(simRes, simRes);
+  restartAndReplay();
 }
 
 function resize() {
@@ -439,6 +457,14 @@ function setSliderValue(id: string, value: number, formatter?: (v: number) => st
 
 function setupUI() {
   bindSlider(
+    "resolution",
+    (v) => {
+      recreateSimulation(v);
+    },
+    (v) => v.toFixed(0),
+    DEFAULT_RES
+  );
+  bindSlider(
     "seed",
     (v) => {
       seedMaterial.uniforms.seed.value = v;
@@ -447,6 +473,16 @@ function setupUI() {
     },
     (v) => v.toFixed(0),
     Math.floor(seedMaterial.uniforms.seed.value)
+  );
+  bindSlider(
+    "percentage",
+    (v) => {
+      params.percentage = v;
+      seedMaterial.uniforms.percentage.value = v * 0.01;
+      restartAndReplay();
+    },
+    (v) => v.toFixed(0),
+    params.percentage
   );
   bindSlider(
     "feed",
@@ -509,7 +545,11 @@ function setupUI() {
   resetBtn?.addEventListener("click", () => {
     params = { ...DEFAULT_PARAMS };
     seedMaterial.uniforms.seed.value = DEFAULT_SEED;
+    recreateSimulation(DEFAULT_RES);
+    setSliderValue("resolution", DEFAULT_RES, (v) => v.toFixed(0));
     setSliderValue("seed", DEFAULT_SEED, (v) => v.toFixed(0));
+    seedMaterial.uniforms.percentage.value = DEFAULT_PARAMS.percentage * 0.01;
+    setSliderValue("percentage", params.percentage, (v) => v.toFixed(0));
     setSliderValue("feed", params.feed, (v) => v.toFixed(4));
     setSliderValue("kill", params.kill, (v) => v.toFixed(4));
     setSliderValue("du", params.du, (v) => v.toFixed(3));
