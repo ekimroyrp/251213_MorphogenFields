@@ -42,6 +42,7 @@ let animTarget = 0;
 let animAccum = 0;
 let animLastTime = 0;
 let animRaf: number | null = null;
+let animDirection: 1 | -1 = 1;
 
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const magnetLayer = document.getElementById("magnet-layer") as HTMLElement;
@@ -49,6 +50,7 @@ const magnetListEl = document.getElementById("magnet-list") as HTMLElement;
 const panelEl = document.getElementById("ui-panel") as HTMLElement;
 const panelHandleEl = document.getElementById("panel-handle") as HTMLElement;
 const animateBtn = document.getElementById("animate-sim") as HTMLButtonElement | null;
+const rewindBtn = document.getElementById("rewind-sim") as HTMLButtonElement | null;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setClearColor(0xffffff, 1);
@@ -272,7 +274,10 @@ function stopAnimation() {
   animAccum = 0;
   animLastTime = 0;
   if (animateBtn) {
-    animateBtn.textContent = "Animate Simulation";
+    animateBtn.textContent = "Play >>";
+  }
+  if (rewindBtn) {
+    rewindBtn.textContent = "<< Rewind";
   }
 }
 
@@ -283,16 +288,32 @@ function animateStep(timestamp: number) {
   }
   const dt = timestamp - animLastTime;
   animLastTime = timestamp;
-  animAccum += (dt / 1000) * 30;
-  const desired = Math.min(animTarget, Math.floor(animAccum));
-  if (desired > currentSteps) {
-    stepSimulation(desired - currentSteps);
-    params.iterations = currentSteps;
-    setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
-  }
-  if (currentSteps >= animTarget) {
-    stopAnimation();
-    return;
+  const stepDelta = (dt / 1000) * 30;
+  if (animDirection === 1) {
+    animAccum += stepDelta;
+    const desired = Math.min(animTarget, Math.floor(animAccum));
+    if (desired > currentSteps) {
+      stepSimulation(desired - currentSteps);
+      params.iterations = currentSteps;
+      setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
+    }
+    if (currentSteps >= animTarget) {
+      stopAnimation();
+      return;
+    }
+  } else {
+    animAccum -= stepDelta;
+    const desired = Math.max(0, Math.floor(animAccum));
+    if (desired < currentSteps) {
+      copyFromBase();
+      goToIterations(desired);
+      params.iterations = currentSteps;
+      setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
+    }
+    if (currentSteps <= animTarget) {
+      stopAnimation();
+      return;
+    }
   }
   animRaf = requestAnimationFrame(animateStep);
 }
@@ -301,15 +322,17 @@ function startAnimation() {
   stopAnimation();
   copyFromBase();
   animating = true;
-  animTarget = MAX_ITERATIONS;
+  animTarget = animDirection === 1 ? MAX_ITERATIONS : 0;
   animAccum = Math.max(currentSteps, Math.floor(params.iterations));
   params.iterations = animTarget;
   setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
-  // ensure state matches starting point
   goToIterations(Math.floor(animAccum));
   animLastTime = 0;
   if (animateBtn) {
-    animateBtn.textContent = "Stop Animation";
+    animateBtn.textContent = "Stop";
+  }
+  if (rewindBtn) {
+    rewindBtn.textContent = "Stop Rewind";
   }
   animRaf = requestAnimationFrame(animateStep);
 }
@@ -676,6 +699,15 @@ function setupUI() {
     addMagnet();
   });
   animateBtn?.addEventListener("click", () => {
+    animDirection = 1;
+    if (animating) {
+      stopAnimation();
+    } else {
+      startAnimation();
+    }
+  });
+  rewindBtn?.addEventListener("click", () => {
+    animDirection = -1;
     if (animating) {
       stopAnimation();
     } else {
