@@ -20,13 +20,13 @@ type SavedState = {
 const MAGNET_MAX = 16;
 const SIM_RES = 512;
 const DEFAULT_PARAMS = {
-  feed: 0.037,
-  kill: 0.06,
-  du: 0.16,
-  dv: 0.08,
+  feed: 0.0785,
+  kill: 0.011,
+  du: 0.195,
+  dv: 0.255,
   dt: 1.0,
-  iterations: 30,
-  fieldThreshold: 0.2
+  iterations: 39,
+  fieldThreshold: 0.62
 };
 const STORAGE_KEY = "ferrofluid-fields-state-v1";
 
