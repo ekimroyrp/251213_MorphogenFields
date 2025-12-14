@@ -1,6 +1,6 @@
 import "./style.css";
 import * as THREE from "three";
-import { displayFragment, rdFragment, screenVertex, seedFragment } from "./shaders";
+import { copyFragment, displayFragment, rdFragment, screenVertex, seedFragment } from "./shaders";
 
 type Magnet = {
   id: number;
@@ -65,6 +65,7 @@ const makeTarget = (res: number) =>
 
 let simTargets = [makeTarget(simRes), makeTarget(simRes)];
 let simIndex = 0;
+let baseState: THREE.WebGLRenderTarget | null = null;
 
 const magnetUniforms = Array.from({ length: MAGNET_MAX }, () => new THREE.Vector4());
 
@@ -109,6 +110,17 @@ simScene.add(simMesh);
 
 const seedMesh = new THREE.Mesh(quadGeometry, seedMaterial);
 seedScene.add(seedMesh);
+
+const copyMaterial = new THREE.ShaderMaterial({
+  vertexShader: screenVertex,
+  fragmentShader: copyFragment,
+  uniforms: {
+    source: { value: null }
+  }
+});
+const copyMesh = new THREE.Mesh(quadGeometry, copyMaterial);
+const copyScene = new THREE.Scene();
+copyScene.add(copyMesh);
 
 const displayMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), displayMaterial);
 displayScene.add(displayMesh);
@@ -157,12 +169,25 @@ function loadState(): SavedState | null {
 }
 
 function seedSimulation() {
-  simIndex = 0;
-  renderer.setRenderTarget(simTargets[simIndex]);
-  renderer.render(seedScene, simCamera);
-  renderer.setRenderTarget(simTargets[1 - simIndex]);
+  if (baseState) {
+    baseState.dispose();
+  }
+  baseState = makeTarget(simRes);
+  renderer.setRenderTarget(baseState);
   renderer.render(seedScene, simCamera);
   renderer.setRenderTarget(null);
+  copyFromBase();
+}
+
+function copyFromBase() {
+  if (!baseState) return;
+  copyMaterial.uniforms.source.value = baseState.texture;
+  for (let i = 0; i < simTargets.length; i++) {
+    renderer.setRenderTarget(simTargets[i]);
+    renderer.render(copyScene, simCamera);
+  }
+  renderer.setRenderTarget(null);
+  simIndex = 0;
   currentSteps = 0;
   syncDisplayTexture();
 }
@@ -212,7 +237,7 @@ function renderFrame() {
 function goToIterations(target: number) {
   const clamped = Math.max(0, Math.floor(target));
   if (clamped < currentSteps) {
-    seedSimulation();
+    copyFromBase();
   }
   const needed = clamped - currentSteps;
   if (needed > 0) {
@@ -221,6 +246,11 @@ function goToIterations(target: number) {
 }
 
 function restartAndReplay() {
+  copyFromBase();
+  goToIterations(params.iterations);
+}
+
+function reseedAndReplay() {
   seedSimulation();
   goToIterations(params.iterations);
 }
@@ -233,11 +263,15 @@ function recreateSimulation(resolution: number) {
   const newTargets = [makeTarget(simRes), makeTarget(simRes)];
   simTargets = newTargets;
   simIndex = 0;
+  if (baseState) {
+    baseState.dispose();
+  }
+  baseState = null;
   stepMaterial.uniforms.prevState.value = simTargets[0].texture;
   stepMaterial.uniforms.resolution.value.set(simRes, simRes);
   displayMaterial.uniforms.stateTex.value = simTargets[0].texture;
   displayMaterial.uniforms.resolution.value.set(simRes, simRes);
-  restartAndReplay();
+  reseedAndReplay();
 }
 
 function resize() {
@@ -290,7 +324,8 @@ function removeMagnet(id: number) {
   magnet.handle?.remove();
   renderMagnetList();
   syncMagnetUniforms();
-  restartAndReplay();
+  copyFromBase();
+  goToIterations(params.iterations);
   scheduleSave();
 }
 
@@ -300,7 +335,8 @@ function clearMagnets() {
   magnetLayer.innerHTML = "";
   magnetListEl.innerHTML = "";
   syncMagnetUniforms();
-  restartAndReplay();
+  copyFromBase();
+  goToIterations(params.iterations);
   scheduleSave();
 }
 
@@ -327,7 +363,8 @@ function createMagnetHandle(magnet: Magnet) {
     draggingMagnet.pos.set(x, 1.0 - y);
     positionMagnetHandle(draggingMagnet);
     syncMagnetUniforms();
-    restartAndReplay();
+    copyFromBase();
+    goToIterations(params.iterations);
   };
 
   const onPointerUp = () => {
@@ -388,10 +425,11 @@ function renderMagnetList() {
     strengthRange.addEventListener("input", () => {
       magnet.strength = parseFloat(strengthRange.value);
       strengthReadout.textContent = magnet.strength.toFixed(2);
-      syncMagnetUniforms();
-      restartAndReplay();
-      scheduleSave();
-    });
+    syncMagnetUniforms();
+    copyFromBase();
+    goToIterations(params.iterations);
+    scheduleSave();
+  });
     strengthRow.append(strengthLabel, strengthRange, strengthReadout);
 
     const radiusRow = document.createElement("div");
@@ -468,7 +506,7 @@ function setupUI() {
     "seed",
     (v) => {
       seedMaterial.uniforms.seed.value = v;
-      restartAndReplay();
+      reseedAndReplay();
       scheduleSave();
     },
     (v) => v.toFixed(0),
@@ -479,7 +517,7 @@ function setupUI() {
     (v) => {
       params.percentage = v;
       seedMaterial.uniforms.percentage.value = v * 0.01;
-      restartAndReplay();
+      reseedAndReplay();
     },
     (v) => v.toFixed(0),
     params.percentage
@@ -488,7 +526,8 @@ function setupUI() {
     "feed",
     (v) => {
       params.feed = v;
-      restartAndReplay();
+      copyFromBase();
+      goToIterations(params.iterations);
     },
     (v) => v.toFixed(4),
     params.feed
@@ -497,7 +536,8 @@ function setupUI() {
     "kill",
     (v) => {
       params.kill = v;
-      restartAndReplay();
+      copyFromBase();
+      goToIterations(params.iterations);
     },
     (v) => v.toFixed(4),
     params.kill
@@ -506,7 +546,8 @@ function setupUI() {
     "du",
     (v) => {
       params.du = v;
-      restartAndReplay();
+      copyFromBase();
+      goToIterations(params.iterations);
     },
     (v) => v.toFixed(3),
     params.du
@@ -515,7 +556,8 @@ function setupUI() {
     "dv",
     (v) => {
       params.dv = v;
-      restartAndReplay();
+      copyFromBase();
+      goToIterations(params.iterations);
     },
     (v) => v.toFixed(3),
     params.dv
@@ -533,7 +575,8 @@ function setupUI() {
     "threshold",
     (v) => {
       params.fieldThreshold = v;
-      restartAndReplay();
+      copyFromBase();
+      goToIterations(params.iterations);
     },
     (v) => v.toFixed(2),
     params.fieldThreshold
@@ -548,11 +591,11 @@ function setupUI() {
     recreateSimulation(DEFAULT_RES);
     setSliderValue("resolution", DEFAULT_RES, (v) => v.toFixed(0));
     setSliderValue("seed", DEFAULT_SEED, (v) => v.toFixed(0));
-    seedMaterial.uniforms.percentage.value = DEFAULT_PARAMS.percentage * 0.01;
-    setSliderValue("percentage", params.percentage, (v) => v.toFixed(0));
-    setSliderValue("feed", params.feed, (v) => v.toFixed(4));
-    setSliderValue("kill", params.kill, (v) => v.toFixed(4));
-    setSliderValue("du", params.du, (v) => v.toFixed(3));
+  seedMaterial.uniforms.percentage.value = DEFAULT_PARAMS.percentage * 0.01;
+  setSliderValue("percentage", params.percentage, (v) => v.toFixed(0));
+  setSliderValue("feed", params.feed, (v) => v.toFixed(4));
+  setSliderValue("kill", params.kill, (v) => v.toFixed(4));
+  setSliderValue("du", params.du, (v) => v.toFixed(3));
     setSliderValue("dv", params.dv, (v) => v.toFixed(3));
     setSliderValue("iterations", params.iterations, (v) => v.toFixed(0));
     setSliderValue("threshold", params.fieldThreshold, (v) => v.toFixed(2));

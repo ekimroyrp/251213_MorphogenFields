@@ -6,6 +6,15 @@ void main() {
 }
 `;
 
+export const copyFragment = /* glsl */ `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D source;
+void main() {
+  gl_FragColor = texture2D(source, vUv);
+}
+`;
+
 export const seedFragment = /* glsl */ `
 precision highp float;
 varying vec2 vUv;
