@@ -27,7 +27,7 @@ const DEFAULT_PARAMS = {
   dv: 0.255,
   dt: 1.0,
   iterations: 1,
-  fieldThreshold: 0.62,
+  fieldThreshold: 0.14,
   percentage: 25
 };
 const DEFAULT_SEED = 735;
@@ -271,8 +271,8 @@ function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "
     id: magnetCounter,
     label: opts?.label ?? `Magnet ${magnetCounter}`,
     pos: opts?.pos ? opts.pos.clone() : new THREE.Vector2(0.5, 0.5),
-    strength: opts?.strength ?? 1.2,
-    radius: opts?.radius ?? 0.22
+    strength: opts?.strength ?? 0.8,
+    radius: opts?.radius ?? 0.16
   };
   magnetCounter += 1;
   magnets.push(magnet);
@@ -402,7 +402,7 @@ function renderMagnetList() {
     const radiusRange = document.createElement("input");
     radiusRange.type = "range";
     radiusRange.min = "0.05";
-    radiusRange.max = "0.6";
+    radiusRange.max = "1.0";
     radiusRange.step = "0.01";
     radiusRange.value = magnet.radius.toFixed(2);
     const radiusReadout = document.createElement("span");
@@ -606,6 +606,9 @@ function loadOrInitialize() {
   if (saved?.params) {
     params = { ...params, ...saved.params, iterations: DEFAULT_PARAMS.iterations };
   }
+  // On refresh, always reset seed and percentage to defaults
+  params.percentage = DEFAULT_PARAMS.percentage;
+  seedMaterial.uniforms.seed.value = DEFAULT_SEED;
   // Position panel before display to avoid jump
   if (saved?.panel) {
     panelEl.style.left = `${saved.panel.left}px`;
