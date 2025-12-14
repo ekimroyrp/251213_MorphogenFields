@@ -332,6 +332,7 @@ function removeMagnet(id: number) {
 function clearMagnets() {
   magnets.forEach((m) => m.handle?.remove());
   magnets = [];
+  magnetCounter = 1;
   magnetLayer.innerHTML = "";
   magnetListEl.innerHTML = "";
   syncMagnetUniforms();
@@ -669,9 +670,10 @@ function loadOrInitialize() {
       });
     });
     magnetCounter = saved.magnets.length + 1;
-  } else {
-    addMagnet();
   }
+  // Always reset to a single magnet at center on refresh
+  clearMagnets();
+  addMagnet({ pos: new THREE.Vector2(0.5, 0.5) });
 }
 
 function init() {
