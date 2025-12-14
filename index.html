@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>251213_FerrofluidFields</title>
+  </head>
+  <body>
+    <div id="app">
+      <div id="canvas-container"></div>
+      <div id="magnet-layer"></div>
+      <div id="ui-panel" class="floating-panel" draggable="false">
+        <div class="panel-header" id="panel-handle">
+          <div class="panel-title">RD Controls</div>
+          <div class="panel-subtitle">Ferrofluid Field Lab</div>
+        </div>
+        <div class="panel-section">
+          <div class="section-title">Simulation</div>
+          <label class="field">
+            <span>Feed</span>
+            <input id="feed" type="range" min="0.0" max="0.1" step="0.0005" value="0.037" />
+            <output id="feed-val">0.0370</output>
+          </label>
+          <label class="field">
+            <span>Kill</span>
+            <input id="kill" type="range" min="0.0" max="0.1" step="0.0005" value="0.06" />
+            <output id="kill-val">0.0600</output>
+          </label>
+          <label class="field">
+            <span>Diffusion U</span>
+            <input id="du" type="range" min="0.01" max="0.4" step="0.005" value="0.16" />
+            <output id="du-val">0.160</output>
+          </label>
+          <label class="field">
+            <span>Diffusion V</span>
+            <input id="dv" type="range" min="0.01" max="0.4" step="0.005" value="0.08" />
+            <output id="dv-val">0.080</output>
+          </label>
+          <label class="field">
+            <span>Iterations</span>
+            <input id="iterations" type="range" min="1" max="80" step="1" value="30" />
+            <output id="iterations-val">30</output>
+          </label>
+          <label class="field">
+            <span>Field Threshold</span>
+            <input id="threshold" type="range" min="0.0" max="3.0" step="0.01" value="0.2" />
+            <output id="threshold-val">0.20</output>
+          </label>
+          <div class="row">
+            <button id="seed-btn" class="accent">Reseed</button>
+            <button id="clear-btn">Clear Magnets</button>
+          </div>
+        </div>
+        <div class="panel-section">
+          <div class="section-title">Magnets</div>
+          <button id="add-magnet" class="full accent">+ Add Magnet</button>
+          <div id="magnet-list" class="magnet-list"></div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

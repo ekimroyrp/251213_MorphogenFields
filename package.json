@@ -1,0 +1,35 @@
+{
+  "name": "251213_ferrofluidfields",
+  "version": "1.0.0",
+  "description": "Interactive ferrofluid-inspired reaction-diffusion visualizer with magnetic modulation.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ekimroyrp/251213_FerrofluidFields.git"
+  },
+  "keywords": [
+    "three.js",
+    "reaction-diffusion",
+    "ferrofluid",
+    "magnetics"
+  ],
+  "author": "ekimroyrp",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ekimroyrp/251213_FerrofluidFields/issues"
+  },
+  "homepage": "https://github.com/ekimroyrp/251213_FerrofluidFields#readme",
+  "dependencies": {
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7"
+  }
+}
