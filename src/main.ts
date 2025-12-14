@@ -15,7 +15,6 @@ type SavedState = {
   params?: Partial<typeof DEFAULT_PARAMS>;
   magnets?: Array<{ label: string; pos: [number, number]; strength: number; radius: number }>;
   panel?: { left: number; top: number };
-  liveDrag?: boolean;
 };
 
 const MAGNET_MAX = 16;
@@ -34,14 +33,12 @@ const STORAGE_KEY = "ferrofluid-fields-state-v1";
 let params = { ...DEFAULT_PARAMS };
 let magnets: Magnet[] = [];
 let magnetCounter = 1;
-let liveDrag = true;
 
 const canvasContainer = document.getElementById("canvas-container") as HTMLElement;
 const magnetLayer = document.getElementById("magnet-layer") as HTMLElement;
 const magnetListEl = document.getElementById("magnet-list") as HTMLElement;
 const panelEl = document.getElementById("ui-panel") as HTMLElement;
 const panelHandleEl = document.getElementById("panel-handle") as HTMLElement;
-const liveDragInput = document.getElementById("live-drag") as HTMLInputElement;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setClearColor(0xffffff, 1);
@@ -135,8 +132,7 @@ function persistState() {
       strength: m.strength,
       radius: m.radius
     })),
-    panel: { left: panelRect.left, top: panelRect.top },
-    liveDrag
+    panel: { left: panelRect.left, top: panelRect.top }
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -293,9 +289,7 @@ function createMagnetHandle(magnet: Magnet) {
     draggingMagnet.pos.set(x, 1.0 - y);
     positionMagnetHandle(draggingMagnet);
     syncMagnetUniforms();
-    if (liveDrag) {
-      queueSimulation(Math.min(18, params.iterations));
-    }
+    queueSimulation(Math.min(18, params.iterations));
   };
 
   const onPointerUp = () => {
@@ -343,6 +337,9 @@ function renderMagnetList() {
 
     const strengthRow = document.createElement("div");
     strengthRow.className = "strength";
+    const strengthLabel = document.createElement("span");
+    strengthLabel.className = "name";
+    strengthLabel.textContent = "Strength";
     const strengthRange = document.createElement("input");
     strengthRange.type = "range";
     strengthRange.min = "0.1";
@@ -358,10 +355,13 @@ function renderMagnetList() {
       queueSimulation(params.iterations);
       scheduleSave();
     });
-    strengthRow.append(strengthRange, strengthReadout);
+    strengthRow.append(strengthLabel, strengthRange, strengthReadout);
 
     const radiusRow = document.createElement("div");
     radiusRow.className = "strength";
+    const radiusLabel = document.createElement("span");
+    radiusLabel.className = "name";
+    radiusLabel.textContent = "Reach";
     const radiusRange = document.createElement("input");
     radiusRange.type = "range";
     radiusRange.min = "0.05";
@@ -377,7 +377,7 @@ function renderMagnetList() {
       queueSimulation(params.iterations);
       scheduleSave();
     });
-    radiusRow.append(radiusRange, radiusReadout);
+    radiusRow.append(radiusLabel, radiusRange, radiusReadout);
 
     item.append(label, remove, strengthRow, radiusRow);
     magnetListEl.appendChild(item);
@@ -438,12 +438,6 @@ function setupUI() {
     addMagnet();
   });
 
-  liveDragInput.checked = liveDrag;
-  liveDragInput.addEventListener("change", () => {
-    liveDrag = liveDragInput.checked;
-    scheduleSave();
-  });
-
   let lastPointerId: number | null = null;
   panelHandleEl.addEventListener("pointerdown", (ev) => {
     ev.preventDefault();
@@ -483,9 +477,6 @@ function loadOrInitialize() {
   const saved = loadState();
   if (saved?.params) {
     params = { ...params, ...saved.params };
-  }
-  if (saved?.liveDrag !== undefined) {
-    liveDrag = saved.liveDrag;
   }
   // Position panel before display to avoid jump
   if (saved?.panel) {

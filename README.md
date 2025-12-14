@@ -20,6 +20,5 @@ This repository explores ferrofluid-inspired reaction–diffusion behavior modul
 - Feed/Kill/Diffusion U/Diffusion V: tune RD chemistry parameters.
 - Iterations: number of simulation steps per user change (higher = sharper, slower).
 - Field Threshold: how strong the magnet field must be before patterns grow.
-- Live Drag Updates: run bursts while dragging magnets (disable if you want manual updates only).
 - Reseed: randomize RD initialization; Clear Magnets: remove all magnets.
 - + Add Magnet: spawn a draggable magnet with adjustable strength and radius; drag on canvas to reposition; remove via ✕ in the list.
