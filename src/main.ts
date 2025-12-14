@@ -261,7 +261,7 @@ function addMagnet(opts?: Partial<Pick<Magnet, "pos" | "strength" | "radius" | "
   createMagnetHandle(magnet);
   renderMagnetList();
   syncMagnetUniforms();
-  queueSimulation(params.iterations);
+  restartAndReplay();
   scheduleSave();
 }
 
@@ -272,7 +272,7 @@ function removeMagnet(id: number) {
   magnet.handle?.remove();
   renderMagnetList();
   syncMagnetUniforms();
-  queueSimulation(params.iterations);
+  restartAndReplay();
   scheduleSave();
 }
 
@@ -282,7 +282,7 @@ function clearMagnets() {
   magnetLayer.innerHTML = "";
   magnetListEl.innerHTML = "";
   syncMagnetUniforms();
-  queueSimulation(params.iterations);
+  restartAndReplay();
   scheduleSave();
 }
 
@@ -309,14 +309,13 @@ function createMagnetHandle(magnet: Magnet) {
     draggingMagnet.pos.set(x, 1.0 - y);
     positionMagnetHandle(draggingMagnet);
     syncMagnetUniforms();
-    queueSimulation(Math.min(18, params.iterations));
+    restartAndReplay();
   };
 
   const onPointerUp = () => {
     if (draggingMagnet) {
       draggingMagnet.handle?.classList.remove("dragging");
       draggingMagnet = null;
-      queueSimulation(params.iterations);
       scheduleSave();
     }
     window.removeEventListener("pointermove", onPointerMove);
@@ -372,7 +371,7 @@ function renderMagnetList() {
       magnet.strength = parseFloat(strengthRange.value);
       strengthReadout.textContent = magnet.strength.toFixed(2);
       syncMagnetUniforms();
-      queueSimulation(params.iterations);
+      restartAndReplay();
       scheduleSave();
     });
     strengthRow.append(strengthLabel, strengthRange, strengthReadout);
@@ -394,7 +393,7 @@ function renderMagnetList() {
       magnet.radius = parseFloat(radiusRange.value);
       radiusReadout.textContent = magnet.radius.toFixed(2);
       syncMagnetUniforms();
-      queueSimulation(params.iterations);
+      restartAndReplay();
       scheduleSave();
     });
     radiusRow.append(radiusLabel, radiusRange, radiusReadout);
