@@ -940,8 +940,13 @@ function loadOrInitialize() {
   if (saved?.params) {
     params = { ...params, ...saved.params, iterations: DEFAULT_PARAMS.iterations };
   }
-  // On refresh, always reset seed and percentage to defaults
+  // On refresh, always reset seed, percentage, and core params to defaults
   params.percentage = DEFAULT_PARAMS.percentage;
+  params.feed = DEFAULT_PARAMS.feed;
+  params.kill = DEFAULT_PARAMS.kill;
+  params.du = DEFAULT_PARAMS.du;
+  params.dv = DEFAULT_PARAMS.dv;
+  params.fieldThreshold = DEFAULT_PARAMS.fieldThreshold;
   seedMaterial.uniforms.seed.value = DEFAULT_SEED;
   if (saved?.magnets?.length) {
     saved.magnets.forEach((m) => {

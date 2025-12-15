@@ -189,7 +189,7 @@
     position: fixed;
     top: 24px;
     left: 24px;
-    width: 340px;
+    width: 380px;
     background: linear-gradient(
       135deg,
       rgba(212, 212, 215, 0.78) 0%,
@@ -321,7 +321,7 @@
 
   .field {
     display: grid;
-    grid-template-columns: 1fr 1.6fr 0.6fr;
+    grid-template-columns: 1fr 2fr 0.6fr;
     gap: 8px;
     align-items: center;
     font-size: 0.78rem;
@@ -354,10 +354,17 @@
     font-size: 0.55rem;
     font-family: inherit;
     font-weight: 700;
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 3px;
     line-height: 1;
+    box-sizing: border-box;
+  }
+
+  .iter-step:hover,
+  .iter-step:active {
+    transform: none;
   }
 
   .field output {
@@ -445,6 +452,7 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-runnable-track {
   height: 10px;
   border-radius: 999px;
+  border: 1px solid #0d0d0f;
   background:
     linear-gradient(90deg, #ff9f4d, #ff7a1a) 0 0 / calc(var(--fill, 0.5) * 100%) 100% no-repeat,
     linear-gradient(90deg, #2f2f32, #2f2f32) 0 0 / 100% 100% no-repeat;
@@ -465,6 +473,7 @@ input[type="range"]::-webkit-slider-thumb {
 input[type="range"]::-moz-range-track {
   height: 10px;
   border-radius: 999px;
+  border: 1px solid #0d0d0f;
   background:
     linear-gradient(90deg, #ff9f4d, #ff7a1a) 0 0 / calc(var(--fill, 0.5) * 100%) 100% no-repeat,
     linear-gradient(90deg, #2f2f32, #2f2f32) 0 0 / 100% 100% no-repeat;
