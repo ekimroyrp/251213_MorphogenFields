@@ -167,7 +167,7 @@
   .floating-panel {
     position: fixed;
     top: 24px;
-    right: 24px;
+    left: 24px;
     width: 340px;
     background: linear-gradient(135deg, #d4d4d7 0%, #c7c7cb 40%, #b3b3b7 100%);
     border: 1px solid #0f0f11;

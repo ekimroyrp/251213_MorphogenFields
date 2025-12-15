@@ -142,7 +142,7 @@ const displayMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), displayMateria
 displayScene.add(displayMesh);
 
 let draggingMagnet: Magnet | null = null;
-let panelDragStart: { x: number; y: number; left: number; top: number } | null = null;
+let panelDragStart: { offsetX: number; offsetY: number } | null = null;
 let pendingIterations = 0;
 let scheduledStep = false;
 let saveTimer: number | null = null;
@@ -165,8 +165,7 @@ function persistState() {
       strength: m.strength,
       radius: m.radius,
       active: m.active
-    })),
-    panel: { left: panelRect.left, top: panelRect.top }
+    }))
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -867,22 +866,20 @@ function setupUI() {
     lastPointerId = ev.pointerId;
     panelHandleEl.setPointerCapture(ev.pointerId);
     panelHandleEl.classList.add("ghost");
-    panelEl.style.right = "auto";
     const rect = panelEl.getBoundingClientRect();
+    panelEl.style.right = "auto";
     panelDragStart = {
-      x: ev.clientX,
-      y: ev.clientY,
-      left: rect.left,
-      top: rect.top
+      offsetX: ev.clientX - rect.left,
+      offsetY: ev.clientY - rect.top
     };
   });
 
   window.addEventListener("pointermove", (ev) => {
     if (!panelDragStart || lastPointerId !== ev.pointerId) return;
-    const dx = ev.clientX - panelDragStart.x;
-    const dy = ev.clientY - panelDragStart.y;
-    panelEl.style.left = `${panelDragStart.left + dx}px`;
-    panelEl.style.top = `${panelDragStart.top + dy}px`;
+    const nextLeft = ev.clientX - panelDragStart.offsetX;
+    const nextTop = ev.clientY - panelDragStart.offsetY;
+    panelEl.style.left = `${nextLeft}px`;
+    panelEl.style.top = `${nextTop}px`;
   });
 
   window.addEventListener("pointerup", (ev) => {
@@ -904,12 +901,6 @@ function loadOrInitialize() {
   // On refresh, always reset seed and percentage to defaults
   params.percentage = DEFAULT_PARAMS.percentage;
   seedMaterial.uniforms.seed.value = DEFAULT_SEED;
-  // Position panel before display to avoid jump
-  if (saved?.panel) {
-    panelEl.style.left = `${saved.panel.left}px`;
-    panelEl.style.top = `${saved.panel.top}px`;
-    panelEl.style.right = "auto";
-  }
   if (saved?.magnets?.length) {
     saved.magnets.forEach((m) => {
       const pos = new THREE.Vector2(clamp01(m.pos[0]), clamp01(m.pos[1]));
