@@ -360,6 +360,24 @@
     padding-right: 2px;
   }
 
+  .magnet-list::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .magnet-list::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, #d4d4d7 0%, #c7c7cb 40%, #b3b3b7 100%);
+    border: 1px solid #0d0d0f;
+  }
+
+  .magnet-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #2c2c30, #111114);
+    border: 1px solid #0a0a0c;
+  }
+
+  .magnet-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #3a3a3f, #151519);
+  }
+
   .magnet-item {
     background: linear-gradient(135deg, #c9c9cd, #b8b8bc);
     border: 1px solid #0d0d0f;
