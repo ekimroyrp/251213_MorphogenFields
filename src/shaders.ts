@@ -15,6 +15,27 @@ void main() {
 }
 `;
 
+export const blurFragment = /* glsl */ `
+precision highp float;
+varying vec2 vUv;
+uniform sampler2D source;
+uniform vec2 resolution;
+
+void main() {
+  vec2 e = 1.0 / resolution;
+  vec4 c = texture2D(source, vUv) * 0.25;
+  c += texture2D(source, vUv + vec2(e.x, 0.0)) * 0.125;
+  c += texture2D(source, vUv - vec2(e.x, 0.0)) * 0.125;
+  c += texture2D(source, vUv + vec2(0.0, e.y)) * 0.125;
+  c += texture2D(source, vUv - vec2(0.0, e.y)) * 0.125;
+  c += texture2D(source, vUv + vec2(e.x, e.y)) * 0.0625;
+  c += texture2D(source, vUv + vec2(-e.x, e.y)) * 0.0625;
+  c += texture2D(source, vUv + vec2(e.x, -e.y)) * 0.0625;
+  c += texture2D(source, vUv + vec2(-e.x, -e.y)) * 0.0625;
+  gl_FragColor = c;
+}
+`;
+
 export const seedFragment = /* glsl */ `
 precision highp float;
 varying vec2 vUv;

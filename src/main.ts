@@ -1,6 +1,13 @@
 import "./style.css";
 import * as THREE from "three";
-import { copyFragment, displayFragment, rdFragment, screenVertex, seedFragment } from "./shaders";
+import {
+  blurFragment,
+  copyFragment,
+  displayFragment,
+  rdFragment,
+  screenVertex,
+  seedFragment
+} from "./shaders";
 
 type Magnet = {
   id: number;
@@ -98,6 +105,7 @@ let simTargets = [makeTarget(simRes), makeTarget(simRes)];
 let simIndex = 0;
 let baseState: THREE.WebGLRenderTarget | null = null;
 let displayTarget: THREE.WebGLRenderTarget | null = null;
+let blurTarget: THREE.WebGLRenderTarget | null = null;
 type DisplayMode = "checker" | "gradient";
 let displayMode: DisplayMode = "checker";
 
@@ -152,9 +160,22 @@ const copyMaterial = new THREE.ShaderMaterial({
     source: { value: null }
   }
 });
+
+const blurMaterial = new THREE.ShaderMaterial({
+  vertexShader: screenVertex,
+  fragmentShader: blurFragment,
+  uniforms: {
+    source: { value: null },
+    resolution: { value: new THREE.Vector2(simRes, simRes) }
+  }
+});
 const copyMesh = new THREE.Mesh(quadGeometry, copyMaterial);
 const copyScene = new THREE.Scene();
 copyScene.add(copyMesh);
+
+const blurMesh = new THREE.Mesh(quadGeometry, blurMaterial);
+const blurScene = new THREE.Scene();
+blurScene.add(blurMesh);
 
 const displayMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), displayMaterial);
 displayScene.add(displayMesh);
@@ -275,6 +296,13 @@ function renderFrame() {
       renderer.setRenderTarget(displayTarget);
       renderer.render(copyScene, simCamera);
       displayTex = displayTarget.texture;
+      if (blurTarget) {
+        blurMaterial.uniforms.source.value = displayTex;
+        renderer.setRenderTarget(blurTarget);
+        renderer.render(blurScene, simCamera);
+        renderer.setRenderTarget(null);
+        displayTex = blurTarget.texture;
+      }
     }
   }
   displayMaterial.uniforms.stateTex.value = displayTex;
@@ -395,6 +423,10 @@ function recreateSimulation(resolution: number) {
     displayTarget.dispose();
     displayTarget = null;
   }
+  if (blurTarget) {
+    blurTarget.dispose();
+    blurTarget = null;
+  }
   simRes = nextRes;
   const newTargets = [makeTarget(simRes), makeTarget(simRes)];
   simTargets = newTargets;
@@ -413,10 +445,16 @@ function recreateSimulation(resolution: number) {
 function ensureDisplayTarget() {
   if (!displayTarget) {
     displayTarget = makeDisplayTarget(simRes, THREE.LinearFilter);
+    blurTarget = makeDisplayTarget(simRes, THREE.LinearFilter);
   } else if (displayTarget.width !== simRes || displayTarget.height !== simRes) {
     displayTarget.dispose();
     displayTarget = makeDisplayTarget(simRes, THREE.LinearFilter);
+    if (blurTarget) {
+      blurTarget.dispose();
+    }
+    blurTarget = makeDisplayTarget(simRes, THREE.LinearFilter);
   }
+  blurMaterial.uniforms.resolution.value.set(simRes, simRes);
 }
 
 function resize() {
