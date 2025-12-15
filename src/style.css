@@ -372,6 +372,23 @@
     transform: none;
   }
 
+  .visuals-body .row button {
+    min-width: 0;
+  }
+
+  .visuals-body .row .accent {
+    background: linear-gradient(135deg, #ff9f4d, #ff7a1a);
+    color: #0c0c0d;
+    border-color: #000;
+    box-shadow: none;
+  }
+
+  .visuals-body .row button:not(.accent) {
+    border-color: #ff7a1a;
+    box-shadow: 0 0 0 1px rgba(255, 122, 26, 0.6);
+    color: #f1f1f4;
+  }
+
   .field output {
     justify-self: end;
     font-variant-numeric: tabular-nums;

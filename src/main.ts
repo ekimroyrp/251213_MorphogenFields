@@ -106,8 +106,8 @@ let simIndex = 0;
 let baseState: THREE.WebGLRenderTarget | null = null;
 let displayTarget: THREE.WebGLRenderTarget | null = null;
 let blurTarget: THREE.WebGLRenderTarget | null = null;
-type DisplayMode = "checker" | "gradient";
-let displayMode: DisplayMode = "checker";
+type DisplayMode = "rough" | "smooth";
+let displayMode: DisplayMode = "smooth";
 
 const magnetUniforms = Array.from({ length: MAGNET_MAX }, () => new THREE.Vector4());
 
@@ -289,14 +289,14 @@ function syncDisplayTexture() {
 
 function renderFrame() {
   let displayTex = simTargets[simIndex].texture;
-  if (displayMode === "gradient") {
+  if (displayMode === "smooth" || displayMode === "rough") {
     ensureDisplayTarget();
     if (displayTarget) {
       copyMaterial.uniforms.source.value = displayTex;
       renderer.setRenderTarget(displayTarget);
       renderer.render(copyScene, simCamera);
       displayTex = displayTarget.texture;
-      if (blurTarget) {
+      if (displayMode === "smooth" && blurTarget) {
         blurMaterial.uniforms.source.value = displayTex;
         renderer.setRenderTarget(blurTarget);
         renderer.render(blurScene, simCamera);
@@ -918,12 +918,12 @@ function setupUI() {
   iterIncBtn?.addEventListener("click", () => stepIterations(1));
   const setDisplayMode = (mode: DisplayMode) => {
     displayMode = mode;
-    visualCheckerBtn?.classList.toggle("accent", mode === "checker");
-    visualGradientBtn?.classList.toggle("accent", mode === "gradient");
+    visualCheckerBtn?.classList.toggle("accent", mode === "rough");
+    visualGradientBtn?.classList.toggle("accent", mode === "smooth");
   };
   setDisplayMode(displayMode);
-  visualCheckerBtn?.addEventListener("click", () => setDisplayMode("checker"));
-  visualGradientBtn?.addEventListener("click", () => setDisplayMode("gradient"));
+  visualCheckerBtn?.addEventListener("click", () => setDisplayMode("rough"));
+  visualGradientBtn?.addEventListener("click", () => setDisplayMode("smooth"));
   bindSlider(
     "threshold",
     (v) => {
