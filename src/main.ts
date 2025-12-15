@@ -466,12 +466,21 @@ function clearMagnets() {
   scheduleSave();
 }
 
+function magnetIndexLabel(magnet: Magnet) {
+  const num = magnet.label.match(/\d+/);
+  return num ? num[0] : magnet.id.toString();
+}
+
 function createMagnetHandle(magnet: Magnet) {
   const el = document.createElement("div");
   el.className = "magnet-handle";
   const thirdPulse = document.createElement("div");
   thirdPulse.className = "pulse-third";
   el.appendChild(thirdPulse);
+  const indexLabel = document.createElement("span");
+  indexLabel.className = "magnet-index";
+  indexLabel.textContent = magnetIndexLabel(magnet);
+  el.appendChild(indexLabel);
   magnetLayer.appendChild(el);
   magnet.handle = el;
   el.classList.toggle("inactive", !magnet.active);
