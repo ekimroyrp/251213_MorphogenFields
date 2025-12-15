@@ -190,12 +190,17 @@
     top: 24px;
     left: 24px;
     width: 340px;
-    background: linear-gradient(135deg, #d4d4d7 0%, #c7c7cb 40%, #b3b3b7 100%);
-    border: 1px solid #0f0f11;
+    background: linear-gradient(
+      135deg,
+      rgba(212, 212, 215, 0.78) 0%,
+      rgba(199, 199, 203, 0.72) 40%,
+      rgba(179, 179, 183, 0.68) 100%
+    );
+    border: 1px solid rgba(15, 15, 17, 0.75);
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
     color: #0c0c0d;
     user-select: none;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     transform: scale(0.9);
     transform-origin: top left;
   }
@@ -204,7 +209,11 @@
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.04));
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.08),
+      rgba(255, 255, 255, 0.06)
+    );
     pointer-events: none;
   }
 
