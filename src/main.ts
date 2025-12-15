@@ -56,6 +56,7 @@ const magnetLayer = document.getElementById("magnet-layer") as HTMLElement;
 const magnetListEl = document.getElementById("magnet-list") as HTMLElement;
 const panelEl = document.getElementById("ui-panel") as HTMLElement;
 const panelHandleEl = document.getElementById("panel-handle") as HTMLElement;
+const panelHandleBottomEl = document.getElementById("panel-handle-bottom") as HTMLElement;
 const animateBtn = document.getElementById("animate-sim") as HTMLButtonElement | null;
 const rewindBtn = document.getElementById("rewind-sim") as HTMLButtonElement | null;
 
@@ -915,6 +916,12 @@ function setupUI() {
       scheduleSave();
     }
   });
+  if (panelHandleBottomEl) {
+    panelHandleBottomEl.addEventListener("pointerdown", (ev) => {
+      ev.preventDefault();
+      panelHandleEl.dispatchEvent(new PointerEvent("pointerdown", ev));
+    });
+  }
 }
 
 function loadOrInitialize() {
