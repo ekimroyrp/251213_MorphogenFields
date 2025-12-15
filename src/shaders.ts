@@ -153,3 +153,18 @@ void main() {
   gl_FragColor = vec4(color, 1.0);
 }
 `;
+
+export const heightFragment = /* glsl */ `
+precision highp float;
+varying vec2 vUv;
+
+uniform sampler2D stateTex;
+
+void main() {
+  float h = texture2D(stateTex, vUv).g;
+  // Simple contrast curve for height
+  h = smoothstep(0.05, 0.95, h);
+  vec3 col = vec3(h);
+  gl_FragColor = vec4(col, 1.0);
+}
+`;

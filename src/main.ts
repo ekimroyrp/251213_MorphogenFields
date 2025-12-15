@@ -4,6 +4,7 @@ import {
   blurFragment,
   copyFragment,
   displayFragment,
+  heightFragment,
   rdFragment,
   screenVertex,
   seedFragment
@@ -71,6 +72,8 @@ const iterIncBtn = document.getElementById("iter-inc") as HTMLButtonElement | nu
 const visualCheckerBtn = document.getElementById("visual-checker") as HTMLButtonElement | null;
 const visualGradientBtn = document.getElementById("visual-gradient") as HTMLButtonElement | null;
 const visualExportBtn = document.getElementById("visual-export") as HTMLButtonElement | null;
+const visualLightingBtn = document.getElementById("visual-lighting") as HTMLButtonElement | null;
+const visualHeightBtn = document.getElementById("visual-height") as HTMLButtonElement | null;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setClearColor(0xffffff, 1);
@@ -109,6 +112,8 @@ let displayTarget: THREE.WebGLRenderTarget | null = null;
 let blurTarget: THREE.WebGLRenderTarget | null = null;
 type DisplayMode = "rough" | "smooth";
 let displayMode: DisplayMode = "smooth";
+type ShadeMode = "environment" | "height";
+let shadeMode: ShadeMode = "environment";
 
 const magnetUniforms = Array.from({ length: MAGNET_MAX }, () => new THREE.Vector4());
 
@@ -147,6 +152,14 @@ const displayMaterial = new THREE.ShaderMaterial({
   }
 });
 
+const heightMaterial = new THREE.ShaderMaterial({
+  vertexShader: screenVertex,
+  fragmentShader: heightFragment,
+  uniforms: {
+    stateTex: { value: simTargets[0].texture }
+  }
+});
+
 const quadGeometry = new THREE.PlaneGeometry(2, 2);
 const simMesh = new THREE.Mesh(quadGeometry, stepMaterial);
 simScene.add(simMesh);
@@ -180,6 +193,10 @@ blurScene.add(blurMesh);
 
 const displayMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), displayMaterial);
 displayScene.add(displayMesh);
+
+const heightMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), heightMaterial);
+const heightScene = new THREE.Scene();
+heightScene.add(heightMesh);
 
 let draggingMagnet: Magnet | null = null;
 let panelDragStart: { offsetX: number; offsetY: number } | null = null;
@@ -306,9 +323,15 @@ function renderFrame() {
       }
     }
   }
-  displayMaterial.uniforms.stateTex.value = displayTex;
+  const targetScene = shadeMode === "height" ? heightScene : displayScene;
+  if (shadeMode === "height") {
+    heightMaterial.uniforms.stateTex.value = displayTex;
+  } else {
+    displayMaterial.uniforms.stateTex.value = displayTex;
+    displayMaterial.uniforms.resolution.value.set(simRes, simRes);
+  }
   renderer.setRenderTarget(null);
-  renderer.render(displayScene, displayCamera);
+  renderer.render(targetScene, displayCamera);
 }
 
 function goToIterations(target: number) {
@@ -456,6 +479,7 @@ function ensureDisplayTarget() {
     blurTarget = makeDisplayTarget(simRes, THREE.LinearFilter);
   }
   blurMaterial.uniforms.resolution.value.set(simRes, simRes);
+  displayMaterial.uniforms.resolution.value.set(simRes, simRes);
 }
 
 function resize() {
@@ -925,6 +949,14 @@ function setupUI() {
   setDisplayMode(displayMode);
   visualCheckerBtn?.addEventListener("click", () => setDisplayMode("rough"));
   visualGradientBtn?.addEventListener("click", () => setDisplayMode("smooth"));
+  const setShadeMode = (mode: ShadeMode) => {
+    shadeMode = mode;
+    visualLightingBtn?.classList.toggle("accent", mode === "environment");
+    visualHeightBtn?.classList.toggle("accent", mode === "height");
+  };
+  setShadeMode(shadeMode);
+  visualLightingBtn?.addEventListener("click", () => setShadeMode("environment"));
+  visualHeightBtn?.addEventListener("click", () => setShadeMode("height"));
   visualExportBtn?.addEventListener("click", () => {
     try {
       const dataURL = renderer.domElement.toDataURL("image/png");
