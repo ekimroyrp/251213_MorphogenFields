@@ -70,8 +70,9 @@ const iterDecBtn = document.getElementById("iter-dec") as HTMLButtonElement | nu
 const iterIncBtn = document.getElementById("iter-inc") as HTMLButtonElement | null;
 const visualCheckerBtn = document.getElementById("visual-checker") as HTMLButtonElement | null;
 const visualGradientBtn = document.getElementById("visual-gradient") as HTMLButtonElement | null;
+const visualExportBtn = document.getElementById("visual-export") as HTMLButtonElement | null;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setClearColor(0xffffff, 1);
 canvasContainer.appendChild(renderer.domElement);
 
@@ -924,6 +925,19 @@ function setupUI() {
   setDisplayMode(displayMode);
   visualCheckerBtn?.addEventListener("click", () => setDisplayMode("rough"));
   visualGradientBtn?.addEventListener("click", () => setDisplayMode("smooth"));
+  visualExportBtn?.addEventListener("click", () => {
+    try {
+      const dataURL = renderer.domElement.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataURL;
+      link.download = `ferrofluid-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.warn("Export failed", err);
+    }
+  });
   bindSlider(
     "threshold",
     (v) => {
