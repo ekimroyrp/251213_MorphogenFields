@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>251213_MorphogenFields</title>
+    <script type="module" crossorigin src="./assets/index-DBRLV1WY.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-6rvGq2km.css">
+  </head>
+  <body>
+    <div id="app">
+      <div id="canvas-container"></div>
+      <div id="magnet-layer"></div>
+      <div id="ui-panel" class="floating-panel" draggable="false">
+        <div class="panel-header" id="panel-handle"></div>
+        <div class="panel-section" data-section="simulation">
+          <div class="section-title">
+            <span>Simulation</span>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="section-body">
+            <label class="field iterations-field">
+              <span>Iterations</span>
+              <div class="iter-slider-wrap">
+                <button id="iter-dec" class="iter-step" aria-label="Step back">◀</button>
+                <input id="iterations" type="range" min="0" max="6000" step="1" value="0" />
+                <button id="iter-inc" class="iter-step" aria-label="Step forward">▶</button>
+              </div>
+              <input id="iterations-val" class="value-input" type="number" min="0" max="6000" step="1" value="0" />
+            </label>
+            <div class="row">
+              <button id="rewind-sim" class="full">&lt;&lt; Rewind</button>
+              <button id="animate-sim" class="accent full">Play &gt;&gt;</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-section collapsed" data-section="variables">
+          <div class="section-title">
+            <span>Variables</span>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="section-body">
+            <label class="field">
+              <span>Resolution</span>
+              <input id="resolution" type="range" min="128" max="2048" step="64" value="512" />
+              <input id="resolution-val" class="value-input" type="number" min="128" max="2048" step="64" value="512" />
+            </label>
+            <label class="field">
+              <span>Percentage</span>
+              <input id="percentage" type="range" min="1" max="100" step="1" value="25" />
+              <input id="percentage-val" class="value-input" type="number" min="1" max="100" step="1" value="25" />
+            </label>
+            <label class="field">
+              <span>Seed</span>
+              <input id="seed" type="range" min="0" max="999" step="1" value="0" />
+              <input id="seed-val" class="value-input" type="number" min="0" max="999" step="1" value="0" />
+            </label>
+            <label class="field">
+              <span>Feed</span>
+              <input id="feed" type="range" min="0.0" max="0.2" step="0.0005" value="0.0785" />
+              <input id="feed-val" class="value-input" type="number" min="0.0" max="0.2" step="0.0005" value="0.0785" />
+            </label>
+            <label class="field">
+              <span>Kill</span>
+              <input id="kill" type="range" min="0.0" max="0.1" step="0.0005" value="0.011" />
+              <input id="kill-val" class="value-input" type="number" min="0.0" max="0.1" step="0.0005" value="0.0110" />
+            </label>
+            <label class="field">
+              <span>Diffusion U</span>
+              <input id="du" type="range" min="0.01" max="0.4" step="0.001" value="0.195" />
+              <input id="du-val" class="value-input" type="number" min="0.01" max="0.4" step="0.001" value="0.195" />
+            </label>
+            <label class="field">
+              <span>Diffusion V</span>
+              <input id="dv" type="range" min="0.01" max="0.4" step="0.001" value="0.255" />
+              <input id="dv-val" class="value-input" type="number" min="0.01" max="0.4" step="0.001" value="0.255" />
+            </label>
+            <label class="field">
+              <span>Threshold</span>
+              <input id="threshold" type="range" min="0.0" max="3.0" step="0.01" value="0.14" />
+              <input id="threshold-val" class="value-input" type="number" min="0.0" max="3.0" step="0.01" value="0.14" />
+            </label>
+            <div class="row">
+              <button id="reset-sim" class="accent full">Reset Variables</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-section collapsed" data-section="magnets">
+          <div class="section-title">
+            <span>Magnets</span>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="section-body">
+            <div class="section-note">LMB = Add // RMB = Delete // MMB = State</div>
+            <div id="magnet-list" class="magnet-list"></div>
+            <button id="clear-btn" class="full accent">Clear Magnets</button>
+          </div>
+        </div>
+        <div class="panel-section collapsed" data-section="visuals">
+          <div class="section-title">
+            <span>Visuals</span>
+            <span class="chevron">▼</span>
+          </div>
+          <div class="section-body visuals-body">
+            <div class="row">
+              <button id="visual-lighting" class="accent full">Environment</button>
+              <button id="visual-height" class="full">Heightfield</button>
+            </div>
+            <div class="row">
+              <button id="visual-gradient" class="accent full">Smooth</button>
+              <button id="visual-checker" class="full">Rough</button>
+            </div>
+            <div class="row">
+              <button id="visual-export" class="full">Export</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-footer-grab" id="panel-handle-bottom"></div>
+      </div>
+    </div>
+  </body>
+</html>
