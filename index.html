@@ -17,9 +17,13 @@
             <span class="chevron">▼</span>
           </div>
           <div class="section-body">
-            <label class="field">
+            <label class="field iterations-field">
               <span>Iterations</span>
-              <input id="iterations" type="range" min="0" max="6000" step="1" value="0" />
+              <div class="iter-slider-wrap">
+                <button id="iter-dec" class="iter-step" aria-label="Step back">◀</button>
+                <input id="iterations" type="range" min="0" max="6000" step="1" value="0" />
+                <button id="iter-inc" class="iter-step" aria-label="Step forward">▶</button>
+              </div>
               <input id="iterations-val" class="value-input" type="number" min="0" max="6000" step="1" value="0" />
             </label>
             <div class="row">

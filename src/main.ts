@@ -59,6 +59,8 @@ const panelHandleEl = document.getElementById("panel-handle") as HTMLElement;
 const panelHandleBottomEl = document.getElementById("panel-handle-bottom") as HTMLElement;
 const animateBtn = document.getElementById("animate-sim") as HTMLButtonElement | null;
 const rewindBtn = document.getElementById("rewind-sim") as HTMLButtonElement | null;
+const iterDecBtn = document.getElementById("iter-dec") as HTMLButtonElement | null;
+const iterIncBtn = document.getElementById("iter-inc") as HTMLButtonElement | null;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setClearColor(0xffffff, 1);
@@ -728,6 +730,7 @@ function setSliderValue(id: string, value: number, formatter?: (v: number) => st
   if (output) {
     output.value = formatter ? formatter(value) : value.toFixed(4);
   }
+  setRangeFill(input, value);
 }
 
 function setupCollapsibleSections() {
@@ -827,6 +830,14 @@ function setupUI() {
     (v) => v.toFixed(0),
     params.iterations
   );
+  const stepIterations = (delta: number) => {
+    const next = Math.min(MAX_ITERATIONS, Math.max(0, Math.round(params.iterations + delta)));
+    params.iterations = next;
+    setSliderValue("iterations", params.iterations, (val) => val.toFixed(0));
+    goToIterations(params.iterations);
+  };
+  iterDecBtn?.addEventListener("click", () => stepIterations(-1));
+  iterIncBtn?.addEventListener("click", () => stepIterations(1));
   bindSlider(
     "threshold",
     (v) => {

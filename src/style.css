@@ -337,6 +337,29 @@
     background: transparent;
   }
 
+  .iterations-field .iter-slider-wrap {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .iter-step {
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #0a0a0c;
+    background: linear-gradient(135deg, #1a1a1d, #0f0f11);
+    color: #f1f1f4;
+    font-size: 0.55rem;
+    font-family: inherit;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    border-radius: 3px;
+    line-height: 1;
+  }
+
   .field output {
     justify-self: end;
     font-variant-numeric: tabular-nums;
