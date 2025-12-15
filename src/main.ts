@@ -61,6 +61,8 @@ const animateBtn = document.getElementById("animate-sim") as HTMLButtonElement |
 const rewindBtn = document.getElementById("rewind-sim") as HTMLButtonElement | null;
 const iterDecBtn = document.getElementById("iter-dec") as HTMLButtonElement | null;
 const iterIncBtn = document.getElementById("iter-inc") as HTMLButtonElement | null;
+const visualCheckerBtn = document.getElementById("visual-checker") as HTMLButtonElement | null;
+const visualGradientBtn = document.getElementById("visual-gradient") as HTMLButtonElement | null;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setClearColor(0xffffff, 1);
@@ -82,9 +84,22 @@ const makeTarget = (res: number) =>
     magFilter: THREE.NearestFilter
   });
 
+const makeDisplayTarget = (res: number, filter: THREE.TextureFilter) =>
+  new THREE.WebGLRenderTarget(res, res, {
+    type: THREE.FloatType,
+    format: THREE.RGBAFormat,
+    depthBuffer: false,
+    stencilBuffer: false,
+    minFilter: filter,
+    magFilter: filter
+  });
+
 let simTargets = [makeTarget(simRes), makeTarget(simRes)];
 let simIndex = 0;
 let baseState: THREE.WebGLRenderTarget | null = null;
+let displayTarget: THREE.WebGLRenderTarget | null = null;
+type DisplayMode = "checker" | "gradient";
+let displayMode: DisplayMode = "checker";
 
 const magnetUniforms = Array.from({ length: MAGNET_MAX }, () => new THREE.Vector4());
 
@@ -252,6 +267,18 @@ function syncDisplayTexture() {
 }
 
 function renderFrame() {
+  let displayTex = simTargets[simIndex].texture;
+  if (displayMode === "gradient") {
+    ensureDisplayTarget();
+    if (displayTarget) {
+      copyMaterial.uniforms.source.value = displayTex;
+      renderer.setRenderTarget(displayTarget);
+      renderer.render(copyScene, simCamera);
+      displayTex = displayTarget.texture;
+    }
+  }
+  displayMaterial.uniforms.stateTex.value = displayTex;
+  renderer.setRenderTarget(null);
   renderer.render(displayScene, displayCamera);
 }
 
@@ -364,6 +391,10 @@ function recreateSimulation(resolution: number) {
   const nextRes = Math.max(128, Math.min(2048, Math.floor(resolution)));
   if (nextRes === simRes) return;
   simTargets.forEach((t) => t.dispose());
+  if (displayTarget) {
+    displayTarget.dispose();
+    displayTarget = null;
+  }
   simRes = nextRes;
   const newTargets = [makeTarget(simRes), makeTarget(simRes)];
   simTargets = newTargets;
@@ -377,6 +408,15 @@ function recreateSimulation(resolution: number) {
   displayMaterial.uniforms.stateTex.value = simTargets[0].texture;
   displayMaterial.uniforms.resolution.value.set(simRes, simRes);
   reseedAndReplay();
+}
+
+function ensureDisplayTarget() {
+  if (!displayTarget) {
+    displayTarget = makeDisplayTarget(simRes, THREE.LinearFilter);
+  } else if (displayTarget.width !== simRes || displayTarget.height !== simRes) {
+    displayTarget.dispose();
+    displayTarget = makeDisplayTarget(simRes, THREE.LinearFilter);
+  }
 }
 
 function resize() {
@@ -838,6 +878,14 @@ function setupUI() {
   };
   iterDecBtn?.addEventListener("click", () => stepIterations(-1));
   iterIncBtn?.addEventListener("click", () => stepIterations(1));
+  const setDisplayMode = (mode: DisplayMode) => {
+    displayMode = mode;
+    visualCheckerBtn?.classList.toggle("accent", mode === "checker");
+    visualGradientBtn?.classList.toggle("accent", mode === "gradient");
+  };
+  setDisplayMode(displayMode);
+  visualCheckerBtn?.addEventListener("click", () => setDisplayMode("checker"));
+  visualGradientBtn?.addEventListener("click", () => setDisplayMode("gradient"));
   bindSlider(
     "threshold",
     (v) => {

@@ -319,6 +319,10 @@
     display: none;
   }
 
+  .visuals-body {
+    min-height: 12px;
+  }
+
   .field {
     display: grid;
     grid-template-columns: 1fr 2fr 0.6fr;
@@ -335,6 +339,7 @@
   .field input[type="range"] {
     --fill: 0.5;
     background: transparent;
+    width: 100%;
   }
 
   .iterations-field .iter-slider-wrap {
