@@ -256,6 +256,7 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: #1b1b1d;
+    font-weight: 700;
     border-left: 3px solid #ff7a1a;
     padding-left: 8px;
     display: flex;
@@ -309,7 +310,8 @@
   }
 
   .field input[type="range"] {
-    accent-color: #ff7a1a;
+    --fill: 0.5;
+    background: transparent;
   }
 
   .field output {
@@ -378,9 +380,53 @@
     background: linear-gradient(135deg, #2c2c30, #111114);
   }
 
-  button.full {
-    width: 100%;
-  }
+button.full {
+  width: 100%;
+}
+
+/* Gradient fill sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, #ff9f4d, #ff7a1a) 0 0 / calc(var(--fill, 0.5) * 100%) 100% no-repeat,
+    linear-gradient(90deg, #2f2f32, #2f2f32) 0 0 / 100% 100% no-repeat;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #0d0d0f;
+  background: linear-gradient(135deg, #ff9f4d, #ff7a1a);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  margin-top: -3px;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 10px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, #ff9f4d, #ff7a1a) 0 0 / calc(var(--fill, 0.5) * 100%) 100% no-repeat,
+    linear-gradient(90deg, #2f2f32, #2f2f32) 0 0 / 100% 100% no-repeat;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #0d0d0f;
+  background: linear-gradient(135deg, #ff9f4d, #ff7a1a);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
 
   .magnet-list {
     display: flex;
@@ -443,7 +489,8 @@
   .magnet-item input[type="range"] {
     flex: 1;
     min-width: 140px;
-    accent-color: #ff7a1a;
+    --fill: 0.5;
+    background: transparent;
   }
 
   .magnet-item .value-input {

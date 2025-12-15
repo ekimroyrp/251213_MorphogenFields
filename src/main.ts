@@ -388,6 +388,14 @@ function clamp01(v: number) {
   return Math.min(1, Math.max(0, v));
 }
 
+function setRangeFill(el: HTMLInputElement, val?: number) {
+  const min = parseFloat(el.min || "0");
+  const max = parseFloat(el.max || "1");
+  const value = val !== undefined ? val : parseFloat(el.value || "0");
+  const pct = (value - min) / (max - min || 1);
+  el.style.setProperty("--fill", Math.min(1, Math.max(0, pct)).toString());
+}
+
 function syncMagnetUniforms() {
   const activeMagnets = magnets.filter((m) => m.active);
   stepMaterial.uniforms.magnetCount.value = activeMagnets.length;
@@ -576,6 +584,7 @@ function renderMagnetList() {
     strengthRange.max = "3.0";
     strengthRange.step = "0.05";
     strengthRange.value = magnet.strength.toFixed(2);
+    setRangeFill(strengthRange, magnet.strength);
     const strengthReadout = document.createElement("input");
     strengthReadout.type = "number";
     strengthReadout.className = "value-input";
@@ -586,6 +595,7 @@ function renderMagnetList() {
     strengthRange.addEventListener("input", () => {
       magnet.strength = parseFloat(strengthRange.value);
       strengthReadout.value = magnet.strength.toFixed(2);
+      setRangeFill(strengthRange, magnet.strength);
       syncMagnetUniforms();
       copyFromBase();
       goToIterations(params.iterations);
@@ -597,6 +607,7 @@ function renderMagnetList() {
       magnet.strength = clamped;
       strengthRange.value = magnet.strength.toFixed(2);
       strengthReadout.value = magnet.strength.toFixed(2);
+      setRangeFill(strengthRange, magnet.strength);
       syncMagnetUniforms();
       copyFromBase();
       goToIterations(params.iterations);
@@ -615,6 +626,7 @@ function renderMagnetList() {
     radiusRange.max = "1.0";
     radiusRange.step = "0.01";
     radiusRange.value = magnet.radius.toFixed(2);
+    setRangeFill(radiusRange, magnet.radius);
     const radiusReadout = document.createElement("input");
     radiusReadout.type = "number";
     radiusReadout.className = "value-input";
@@ -625,6 +637,7 @@ function renderMagnetList() {
     radiusRange.addEventListener("input", () => {
       magnet.radius = parseFloat(radiusRange.value);
       radiusReadout.value = magnet.radius.toFixed(2);
+      setRangeFill(radiusRange, magnet.radius);
       syncMagnetUniforms();
       copyFromBase();
       goToIterations(params.iterations);
@@ -636,6 +649,7 @@ function renderMagnetList() {
       magnet.radius = clamped;
       radiusRange.value = magnet.radius.toFixed(2);
       radiusReadout.value = magnet.radius.toFixed(2);
+      setRangeFill(radiusRange, magnet.radius);
       syncMagnetUniforms();
       copyFromBase();
       goToIterations(params.iterations);
@@ -685,6 +699,7 @@ function bindSlider(
     if (output) {
       output.value = formatter ? formatter(value) : value.toFixed(4);
     }
+    setRangeFill(input, value);
     onChange(value);
   };
   input.addEventListener("input", () => {
