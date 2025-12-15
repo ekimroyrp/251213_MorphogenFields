@@ -196,6 +196,8 @@
     color: #0c0c0d;
     user-select: none;
     backdrop-filter: blur(4px);
+    transform: scale(0.9);
+    transform-origin: top left;
   }
 
   .floating-panel::before {
